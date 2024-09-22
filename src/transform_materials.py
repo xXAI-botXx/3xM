@@ -664,15 +664,76 @@ def load_random_material(source_path):
     mat = create_material_from_json(random_mat, show=True)
 
 def create_material_json(source_path, material_name):
-    images = []
-    textures = []
+    """
+    Creates a Material information in gltf format.
+
+    Example Format:
+
+    {
+        "materials": [
+            {
+                "doubleSided": true,
+                "name": "iron galvanized matte",
+                "normalTexture": {
+                    "index": 0
+                },
+                "pbrMetallicRoughness": {
+                    "baseColorTexture": {
+                        "index": 1
+                    },
+                    "metallicRoughnessTexture": {
+                        "index": 2
+                    }
+                }
+            }
+        ],
+        "textures": [
+            {
+                "sampler": 0,
+                "source": 0
+            },
+            {
+                "sampler": 0,
+                "source": 1
+            },
+            {
+                "sampler": 0,
+                "source": 2
+            }
+        ],
+        "images": [
+            {
+                "mimeType": "image/jpeg",
+                "name": "iron galvanized matte_normal",
+                "uri": "textures/iron%20galvanized%20matte_normal.jpg"
+            },
+            {
+                "mimeType": "image/jpeg",
+                "name": "iron galvanized matte_albedo",
+                "uri": "textures/iron%20galvanized%20matte_albedo.jpg"
+            },
+            {
+                "mimeType": "image/jpeg",
+                "name": "iron galvanized matte_metallic-iron galvanized matte_roughness",
+                "uri": "textures/iron%20galvanized%20matte_metallic-iron%20galvanized%20matte_roughness.jpg"
+            }
+        ]
+    }
+    """
     materials = []
+    textures = []
+    images = []
     
     def add_image_and_texture(image_path, image_name):
+        if image_path and image_path.endswith(".png"):
+            img_type = "png"
+        else:
+            img_type = "jpeg"
         img_data = {
-            "mimeType": "image/jpeg",
+            "mimeType": f"image/{img_type}",
             "name": image_name,
-            "uri": image_path
+            # "uri": image_path
+            "uri": f"textures/{image_path.split('/')[-1]}" if image_path else image_path
         }
         images.append(img_data)
         
@@ -682,10 +743,12 @@ def create_material_json(source_path, material_name):
         }
         textures.append(texture_data)
 
-    # add image maps
+    # add image maps and also textures -> also could be hard coded
     material = find_material(source_path)
     for cur_attribute, cur_path in material.items():
-        add_image_and_texture(cur_path, get_readable_material_name(cur_attribute))
+        # only add normal, base color and roughness, or also the rest?
+        if cur_attribute in ["normal_map", "color_map", "metal_map"]:    # "roughness_map"
+            add_image_and_texture(cur_path, get_readable_material_name(cur_attribute))
 
     # create json file
     material_data = {
@@ -698,9 +761,9 @@ def create_material_json(source_path, material_name):
             "baseColorTexture": {
                 "index": 1 if material["color_map"] else None  # Color-Textur
             },
-            "metallicFactor": 0,  # Beispielwert für Metalness
             "metallicRoughnessTexture": {
-                "index": 2 if material["roughness_map"] else None  # Roughness-Textur
+                # "index": 2 if material["roughness_map"] else None  # Roughness-Textur
+                "index": 2 if material["metal_map"] else None  # Roughness-Textur
             }
         }
     }
@@ -722,39 +785,45 @@ def prep_images(source_path, output_path):
     """
     Converts images to a specific format with info file:
 
-    material_data.json -> contains the paths to te textures
+    material_data.json -> contains the paths to te textures in gltf format
     texture/
         color.jpg
         ...
     """
-    for cur_dir in os.listdir(source_path):
-        cur_path = os.path.join(source_path, cur_dir)
-        if os.path.isdir(cur_path):
-            # get all material files
-            material = find_material(cur_path, extract_arm_file=True)
+    counter = 0
+    for cur_category in os.listdir(source_path):
+        for cur_dir in os.listdir(os.path.join(source_path, cur_category)):
+            cur_path = os.path.join(source_path, cur_category, cur_dir)
+            if os.path.isdir(cur_path):
+                # get all material files
+                material = find_material(cur_path, extract_arm_file=True)
 
-            # copy all files to new output path
-            cur_output_path = os.path.join(output_path, cur_dir)
-            cur_output_material_path = os.path.join(cur_output_path, "textures")
-            if os.path.exists(cur_output_path):
-                shutil.rmtree(cur_output_path)
-            os.makedirs(cur_output_material_path, exist_ok=True)
+                # copy all files to new output path
+                cur_output_path = os.path.join(output_path, cur_category, cur_dir)
+                cur_output_material_path = os.path.join(cur_output_path, "textures")
+                if os.path.exists(cur_output_path):
+                    shutil.rmtree(cur_output_path)
+                os.makedirs(cur_output_material_path, exist_ok=True)
 
-            for key, value in material.items():
-                if value:
-                    # could also give key in material_name_mapping and should get standardized name
-                    name = get_standardized_material_name(value.split("/")[-1])
-                    new_output_material_path = os.path.join(cur_output_material_path, name)
-                    shutil.copy(value, new_output_material_path)
+                for key, value in material.items():
+                    if value:
+                        # could also give key in material_name_mapping and should get standardized name
+                        name = get_standardized_material_name(value.split("/")[-1])
+                        new_output_material_path = os.path.join(cur_output_material_path, name)
+                        shutil.copy(value, new_output_material_path)
 
-            # create material_data.json file (in cur_output_path)
-            json_file_content = create_material_json(cur_output_path, cur_dir)
+                # create material_data.json file (in cur_output_path)
+                name = cur_dir.replace("-Unreal-Engine", "").replace("-ue", "")
+                json_file_content = create_material_json(cur_output_path, name)
 
-            with open(os.path.join(cur_output_path, 'material_data.json'), 'w') as json_file:
-                json.dump(json_file_content, json_file, indent=4)
+                with open(os.path.join(cur_output_path, 'material_data.json'), 'w') as json_file:
+                    json.dump(json_file_content, json_file, indent=4)
 
-            print(f"Successfull created new Json file and textures at {cur_output_path}!")
-    
+                print(f"Successfull created new Json file and textures at {cur_output_path}!")
+                counter += 1
+
+    print(f"\n Finish! Successfull transformed {counter} materials!")
+        
 
 if __name__ == "__main__":
     # img_map_2_gltf(path="/home/tobia/")
@@ -765,7 +834,7 @@ if __name__ == "__main__":
 
     # load_random_material("/home/tobia/data/3xM/materials/blenderkit/prep")
     
-    prep_images(source_path="/home/tobia/data/3xM/materials/polyhaven", output_path="/home/tobia/data/3xM/materials/polyhaven_prep")
+    prep_images(source_path="/home/tobia/data/3xM/materials/brian_500", output_path="/home/tobia/data/3xM/materials/brian_500_prep")
 
 
 
