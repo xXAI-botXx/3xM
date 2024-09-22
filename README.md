@@ -13,8 +13,12 @@ This project contains:
 
 ### Data-Source
 
-A subset from the Thingi10K Dataset got sorted. The sort process tried to make sure:
-- only unique 3D-Models
+Subset of [Thingi10k](https://ten-thousand-models.appspot.com/), please see the [Thingi10k Summary.xlsx](Thingi10K Summary.xlsx) to see the creator of these models. I also used a few 3D-models from [polyhaven](https://polyhaven.com/).
+
+The process of finding good fitting models:
+- only unique 3D-Models (no double or too similar models)
 - the 3D-Model have to be connected (not 2 or more seperated parts)
+
+For Materials I used the paid version from [Brian](https://freepbr.com/).
 
 
