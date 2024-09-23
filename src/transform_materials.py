@@ -6,6 +6,7 @@ from PIL import Image
 import bpy
 import json
 
+import numpy as np
 import cv2
 
 MATERIAL_PATH = "/home/tobia/data/model_material_mixture_dataset/materials/"
@@ -663,6 +664,47 @@ def load_random_material(source_path):
     random_mat = random.choice(all_materials)
     mat = create_material_from_json(random_mat, show=True)
 
+def cv_img_is_none(cv_img):
+    return cv_img is None or not isinstance(cv_img, np.ndarray) or cv_img.size == 0
+
+def combine_metal_roughness(metal_path, roughness_path, output_path):
+    # Lade die beiden Bilder in Graustufen
+    metal_img = cv2.imread(metal_path, cv2.IMREAD_GRAYSCALE)  # Metall in Blau-Kanal
+    roughness_img = cv2.imread(roughness_path, cv2.IMREAD_GRAYSCALE)  # Rauheit in Grün-Kanal
+    
+    # Überprüfe, ob die Bilder geladen wurden
+    if cv_img_is_none(metal_img) and cv_img_is_none(roughness_img):
+        # raise Exception(f"Could not load metal and roughness texture. Both are None.")
+        print(f"Could not load metal and roughness texture. Both are None.")
+        return
+    if cv_img_is_none(metal_img):
+        print(f"Could not load metal texture from {metal_path}")
+    if cv_img_is_none(roughness_img):
+        print(f"Could not load roughness texture from {roughness_path}")
+    
+    # Überprüfe, ob die Größen übereinstimmen
+    if not cv_img_is_none(metal_img) and not cv_img_is_none(roughness_img):
+        if metal_img.shape != roughness_img.shape:
+            if np.sum(metal_img.shape) < np.sum(roughness_img.shape):
+                print(f"Resizing roughness image from {roughness_img.shape} to {metal_img.shape}")
+                roughness_img = cv2.resize(roughness_img, (metal_img.shape[1], metal_img.shape[0]))
+            else:
+                print(f"Resizing metal image from {metal_img.shape} to {roughness_img.shape}  ")
+                metal_img = cv2.resize(metal_img, (roughness_img.shape[1], roughness_img.shape[0]))
+    
+    # Erstelle ein leeres Bild mit 3 Kanälen (BGR)
+    height, width = metal_img.shape if not cv_img_is_none(metal_img) else roughness_img.shape
+    combined_img = np.zeros((height, width, 3), dtype=np.uint8)
+    
+    # Weisen den Blau-Kanal der Metal-Textur zu und den Grün-Kanal der Roughness-Textur
+    combined_img[:, :, 0] = metal_img if not cv_img_is_none(metal_img) else 0  # Blau für Metalness
+    combined_img[:, :, 1] = roughness_img if not cv_img_is_none(roughness_img)  else 0  # Grün für Roughness
+    combined_img[:, :, 2] = 0  # Rot bleibt auf 0
+    
+    # Speichere das kombinierte Bild
+    cv2.imwrite(output_path, combined_img)
+    print(f"Combined image saved to {output_path}")
+
 def create_material_json(source_path, material_name):
     """
     Creates a Material information in gltf format.
@@ -747,10 +789,16 @@ def create_material_json(source_path, material_name):
     material = find_material(source_path)
     for cur_attribute, cur_path in material.items():
         # only add normal, base color and roughness, or also the rest?
-        if cur_attribute in ["normal_map", "color_map", "metal_map"]:    # "roughness_map"
+        if cur_attribute in ["normal_map", "color_map"]:    # "roughness_map", metal_map
             add_image_and_texture(cur_path, get_readable_material_name(cur_attribute))
 
     # create json file
+    metalroughness = None
+    for cur_root, cur_dirs, cur_files in os.walk(source_path):
+        if "MetalRoughness.jpg" in cur_files or "MetalRoughness.png" in cur_files:
+            metalroughness = os.path.join(cur_root, "MetalRoughness.jpg")
+            add_image_and_texture(metalroughness, "MetalRoughness.jpg")
+
     material_data = {
         "doubleSided": True,
         "name": material_name,
@@ -763,7 +811,7 @@ def create_material_json(source_path, material_name):
             },
             "metallicRoughnessTexture": {
                 # "index": 2 if material["roughness_map"] else None  # Roughness-Textur
-                "index": 2 if material["metal_map"] else None  # Roughness-Textur
+                "index": 2 if metalroughness else None  # Roughness-Textur
             }
         }
     }
@@ -811,6 +859,10 @@ def prep_images(source_path, output_path):
                         name = get_standardized_material_name(value.split("/")[-1])
                         new_output_material_path = os.path.join(cur_output_material_path, name)
                         shutil.copy(value, new_output_material_path)
+
+                if "roughness_map" in material.keys() and "metal_map" in material.keys():
+                    combine_metal_roughness(metal_path=material["metal_map"], roughness_path=material["roughness_map"],
+                                             output_path=os.path.join(cur_output_material_path, "MetalRoughness.jpg"))
 
                 # create material_data.json file (in cur_output_path)
                 name = cur_dir.replace("-Unreal-Engine", "").replace("-ue", "")
