@@ -259,6 +259,34 @@ def extract_gltf_from_subfolder(source_folder, destination_folder, rm_src=False)
             # if rm_src:
             #     shutil.rmtree(os.path.join(source_folder, cur_dir))
 
+def scale_to_size(mesh, target_size):
+    # Get current size of the mesh
+    current_size = mesh.bounding_box.extents
+    # Get the scale-factor with the biggest dimension
+    scale_factor = target_size / max(current_size)
+    # Scale mesh
+    mesh.apply_scale(scale_factor)
+    return mesh
+
+def scale_stl(source_path, output_path, target_size=1):
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
+    os.makedirs(output_path, exist_ok=True)
+
+    for cur_file in os.listdir(source_path):
+        if os.path.isfile(cur_file) and cur_file.endswith(".stl"):
+            cur_stl_path = os.path.join(source_path, cur_file)
+
+            # load stl model
+            mesh = trimesh.load('dein_objekt.stl')
+
+            # Scale mesh to target size
+            scale_mesh = scale_to_size(mesh, zielgröße)
+
+            # Save the new sized mesh
+            cur_export_stl_path = os.path.join(output_path, cur_file)
+            scale_mesh.export(cur_export_stl_path)
+
 
 if __name__ == "__main__":
     # Define your source directory containing folders which contains .jpg, .usdc, .obj, and .mtl files
@@ -268,8 +296,9 @@ if __name__ == "__main__":
 
     # ambientcg_formatting(source_dir=source_dir, dest_dir=dest_dir,new_folder=False)
 
-    thingi10k_formatting(source_dir=source_dir, dest_dir=dest_dir)
+    # thingi10k_formatting(source_dir=source_dir, dest_dir=dest_dir)
 
     # extract_gltf_from_subfolder(source_folder="/home/tobia/data/3xM/models/polyhaven", destination_folder="/home/tobia/data/3xM/models/polyhaven_prep", rm_src=False)
 
+    scale_stl(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSortedScaled")
 
