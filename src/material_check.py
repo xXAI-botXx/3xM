@@ -56,8 +56,10 @@ def load_material_next_by_next(path, cur_number=0):
         if len(cur_files) > 3:
             counter += 1
 
-source_path = "/home/tobia/data/3xM/final/materials"
-load_material_next_by_next(source_path, cur_number=0)
+# source_path = "/home/tobia/data/3xM/final/materials"
+source_path = "/home/tobia/data/3xM/materials/compare"
+numb = 0
+load_material_next_by_next(source_path, cur_number=numb)
 
 
 
