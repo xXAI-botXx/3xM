@@ -875,7 +875,62 @@ def prep_images(source_path, output_path):
                 counter += 1
 
     print(f"\n Finish! Successfull transformed {counter} materials!")
-        
+
+def unreal_prep_images(source_path, output_path):
+    """
+    Converts images to a standaridzed name
+    """
+    counter = 0
+    for cur_category in os.listdir(source_path):
+        for cur_dir in os.listdir(os.path.join(source_path, cur_category)):
+            cur_path = os.path.join(source_path, cur_category, cur_dir)
+            if os.path.isdir(cur_path):
+                # get all material files
+                material = find_material(cur_path, extract_arm_file=True)
+
+                # copy all files to new output path
+                cur_output_path = os.path.join(output_path, cur_category, cur_dir)
+                if os.path.exists(cur_output_path):
+                    shutil.rmtree(cur_output_path)
+                os.makedirs(cur_output_path, exist_ok=True)
+
+                for key, value in material.items():
+                    if value:
+                        # could also give key in material_name_mapping and should get standardized name
+                        name = get_standardized_material_name(value.split("/")[-1])
+                        new_output_material_path = os.path.join(cur_output_path, name)
+                        shutil.copy(value, new_output_material_path)
+
+                print(f"Successfull created standardized textures at {cur_output_path}!")
+                counter += 1
+
+    print(f"\n Finish! Successfull transformed {counter} materials!")
+
+def unreal_renameing(source_path, output_path):
+    counter = 0
+    for cur_material in os.listdir(source_path):
+        cur_path = os.path.join(source_path, cur_material)
+        if os.path.isdir(cur_path):
+            # get all material files
+            material = find_material(cur_path, extract_arm_file=True)
+
+            # copy all files to new output path
+            cur_output_path = os.path.join(output_path, f"3xM_Material_ID_{counter}")
+            if os.path.exists(cur_output_path):
+                shutil.rmtree(cur_output_path)
+            os.makedirs(cur_output_path, exist_ok=True)
+
+            for key, value in material.items():
+                if value:
+                    # could also give key in material_name_mapping and should get standardized name
+                    name = get_standardized_material_name(value.split("/")[-1])
+                    new_output_material_path = os.path.join(cur_output_path, name)
+                    shutil.copy(value, new_output_material_path)
+
+            print(f"Successfull created standardized textures at {cur_output_path}!")
+            counter += 1
+
+    print(f"\n Finish! Successfull renamed {counter} materials!")
 
 if __name__ == "__main__":
     # img_map_2_gltf(path="/home/tobia/")
@@ -885,8 +940,10 @@ if __name__ == "__main__":
     #blender_prep("/home/tobia/data/3xM/materials/blenderkit/raw", "/home/tobia/data/3xM/materials/blenderkit/prep")
 
     # load_random_material("/home/tobia/data/3xM/materials/blenderkit/prep")
+
+    # prep_images(source_path="/home/tobia/data/3xM/materials/brian_500", output_path="/home/tobia/data/3xM/materials/brian_500_prep_ue")
     
-    prep_images(source_path="/home/tobia/data/3xM/materials/brian_500", output_path="/home/tobia/data/3xM/materials/brian_500_prep")
+    unreal_prep_images(source_path="/home/tobia/data/3xM/materials/brian_500", output_path="/home/tobia/data/3xM/materials/brian_500_prep_ue")
 
 
 
