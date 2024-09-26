@@ -225,7 +225,8 @@ def ambientcg_formatting(source_dir, dest_dir, new_folder=True):
                 convert_to_gltf_bin(cur_source_dir, dest_dir)
 
 # Main function to run the conversion
-def thingi10k_formatting(source_dir, dest_dir):
+def thingi10k_formatting(source_dir, dest_dir, use_ID=False):
+    ID = 0
     for cur_file in os.listdir(source_dir):
         cur_file_path = os.path.join(source_dir, cur_file)
         
@@ -233,8 +234,12 @@ def thingi10k_formatting(source_dir, dest_dir):
 
         if os.path.isfile(cur_file_path) and cur_file.endswith(".stl"):
             # Convert .stl to .gltf and .bin
-            cur_name = ".".join(cur_file.split(".")[:-1])
+            if use_ID:
+                cur_name = f"3xM_Model_ID_{ID}"
+            else:
+                cur_name = ".".join(cur_file.split(".")[:-1])
             convert_stl_to_gltf_bin(cur_file_path, dest_dir, cur_name)
+            ID += 1
 
 def extract_gltf_from_subfolder(source_folder, destination_folder, rm_src=False):
 
@@ -297,8 +302,9 @@ if __name__ == "__main__":
     # ambientcg_formatting(source_dir=source_dir, dest_dir=dest_dir,new_folder=False)
 
     # thingi10k_formatting(source_dir=source_dir, dest_dir=dest_dir)
+    thingi10k_formatting(source_dir="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", dest_dir="D:/Informatik/Projekte/3xM/model_material/final_models", use_ID=True)
 
     # extract_gltf_from_subfolder(source_folder="/home/tobia/data/3xM/models/polyhaven", destination_folder="/home/tobia/data/3xM/models/polyhaven_prep", rm_src=False)
 
-    scale_stl(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSortedScaled")
+    # scale_stl(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSortedScaled")
 
