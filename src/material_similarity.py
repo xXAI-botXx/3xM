@@ -77,10 +77,10 @@ def compare_materials_and_copy(material_folder, compare_folder, similarity_thres
                         print(f"Material {material_names[i]} and Material {material_names[j]} are similar with a similarity score of {average_similarity:.2f}")
 
                 counter += 1
-                with open("./material_sim_last_index.txt", "w") as index_file:
+                with open(f"./saves/material_sim_last_index_{int(counter%3)}.txt", "w") as index_file:
                     index_file.write(f"Last Index Counter: {counter}")
-    if os.path.exists("./material_sim_last_index.txt"):
-        os.remove("./material_sim_last_index.txt")
+    # if os.path.exists("./saves/material_sim_last_index.txt"):
+    #     os.remove("./saves/material_sim_last_index.txt")
 
 if __name__ == "__main__":
     material_folder = "D:/Informatik/Projekte/3xM/model_material/brian_500_prep_ue" # "/home/tobia/data/3xM/final/materials"  # Path to your materials folder
