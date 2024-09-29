@@ -31,155 +31,35 @@ def convert_to_gltf_bin(source_path, destination_path):
             
             print(f'Converted {file_name} to {gltf_path}')
 
-# def convert_stl_to_gltf_bin(source_file_path, dest_path, name, ending="gltf", check_closed_mesh=False):
-#     """
-#     Takes a .stl file from source_file_path and converts it to an gtlf file.
-#     Which will be saved on: dest_path/name.glb or dest_path/name.gltf
-#     """
-#     # Load the STL file using trimesh
-#     mesh = trimesh.load(source_file_path)
+def convert_stl_to_glb(source_path, output_path):
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
+    else:
+        os.makedirs(output_path, exist_ok=True)
 
-#     if check_closed_mesh:
-#         # Versuche, das Mesh zu reparieren, falls es nicht geschlossen ist
-#         if not mesh.is_volume:
-#             print(f"Repairing mesh for file: {source_file_path}")
-#             mesh.fill_holes()
-#             mesh.fix_normals()
-        
-#         if not mesh.is_volume:
-#             raise ValueError("The STL file must describe a valid 3D volume.")
+    idx = 0
 
-#     # Convert to GLTF
-#     gltf = GLTF2()
-    
-#     # Convert mesh data (vertices, indices) to GLTF-compatible format
-#     vertices = mesh.vertices.flatten().tolist()
-#     indices = mesh.faces.flatten().tolist()
-    
-#     # Create buffer
-#     buffer_data = bytes(mesh.export(file_type='glb'))  # Get binary data
-#     buffer = Buffer(uri=f'{name}.bin', byteLength=len(buffer_data))
+    for cur_file in os.listdir(source_path):
+        cur_path = os.path.join(source_path, cur_file)
+        if os.path.isfile(cur_path) and cur_file.endswith(".stl"):
+            output_glb_file_path = os.path.join(output_path, f"3xM_Model_ID_{idx}.glb")
 
-#     # Save the bin file
-#     bin_file_path = os.path.join(dest_path, f"{name}.bin")
-#     with open(bin_file_path, 'wb') as f:
-#         f.write(buffer_data)
-    
-#     # Create BufferView (links the buffer with mesh data)
-#     buffer_view = BufferView(buffer=0, byteOffset=0, byteLength=len(buffer_data), target=34963)
-    
-#     # Create Accessor (for vertices and indices)
-#     accessor_positions = Accessor(bufferView=0, byteOffset=0, componentType=5126, count=len(mesh.vertices),
-#                                   type="VEC3", max=[mesh.bounds[1].tolist()], min=[mesh.bounds[0].tolist()])
-#     accessor_indices = Accessor(bufferView=0, byteOffset=0, componentType=5123, count=len(mesh.faces) * 3,
-#                                 type="SCALAR")
+            # reset blender scene
+            bpy.ops.wm.read_factory_settings(use_empty=True)
 
-#     # Create Mesh
-#     primitive = Primitive(attributes={"POSITION": 0}, indices=1)
-#     gltf_mesh = Mesh(primitives=[primitive])
-    
-#     # Add to GLTF
-#     gltf.buffers.append(buffer)
-#     gltf.bufferViews.append(buffer_view)
-#     gltf.accessors.append(accessor_positions)
-#     gltf.accessors.append(accessor_indices)
-#     gltf.meshes.append(gltf_mesh)
+            # import stl file
+            bpy.ops.wm.stl_import(filepath=cur_path)
 
-#     # Create Node and Scene
-#     node = Node(mesh=0)
-#     scene = Scene(nodes=[0])
-#     gltf.nodes.append(node)
-#     gltf.scenes.append(scene)
-    
-#     # Set asset metadata
-#     gltf.asset = Asset(generator="STL to GLTF Converter", version="2.0")
+            # choose every object
+            bpy.ops.object.select_all(action='SELECT')
 
-#     # Save as .glb (binary GLTF) or .gltf (JSON)
-#     if ending == "glb":
-#         gltf.convert_buffers(BufferFormat.BINARYBLOB)
-#         gltf.save(os.path.join(dest_path, f"{name}.glb"))
-#     else:
-#         # gltf.convert_buffers(BufferFormat.BINARYBLOB)
-#         gltf.save_json(os.path.join(dest_path, f"{name}.gltf"))
+            # convert to mesh
+            bpy.ops.object.convert(target='MESH')
 
-#     print(f"File successfully converted to {dest_path}/{name}.glb or .gltf")
+            # export as glb file
+            bpy.ops.export_scene.gltf(filepath=output_glb_file_path, export_format='GLB')
 
-# def convert_stl_to_gltf_bin(source_file_path, dest_path, name, ending="gltf", check_closed_mesh=False):
-#     """
-#     Takes a .stl file from source_file_path and converts it to a .gltf file.
-#     Saves the file at: dest_path/name.glb or dest_path/name.gltf
-#     """
-#     # Load the STL file using trimesh
-#     mesh = trimesh.load(source_file_path)
-
-#     if check_closed_mesh:
-#         # Repair the mesh if it is not closed
-#         if not mesh.is_volume:
-#             print(f"Repairing mesh for file: {source_file_path}")
-#             mesh.fill_holes()
-#             mesh.fix_normals()
-        
-#         if not mesh.is_volume:
-#             raise ValueError("The STL file must describe a valid 3D volume.")
-
-#     # Convert to GLTF
-#     gltf = GLTF2()
-
-#     # Flatten the vertex and face data
-#     vertices = mesh.vertices.flatten().tolist()
-#     indices = mesh.faces.flatten().tolist()
-
-#     # Create buffer for vertex and index data
-#     buffer_data = mesh.vertices.tobytes() + mesh.faces.tobytes()
-
-#     # Create Buffer
-#     buffer = Buffer(uri=f'{name}.bin', byteLength=len(buffer_data))
-
-#     # Save the bin file
-#     bin_file_path = os.path.join(dest_path, f"{name}.bin")
-#     with open(bin_file_path, 'wb') as f:
-#         f.write(buffer_data)
-
-#     # Create BufferViews (separate for vertices and indices)
-#     vertex_buffer_view = BufferView(buffer=0, byteOffset=0, byteLength=mesh.vertices.nbytes, target=34962)  # ARRAY_BUFFER
-#     index_buffer_view = BufferView(buffer=0, byteOffset=mesh.vertices.nbytes, byteLength=mesh.faces.nbytes, target=34963)  # ELEMENT_ARRAY_BUFFER
-
-#     # Create Accessors for positions (vertices) and indices
-#     accessor_positions = Accessor(bufferView=0, byteOffset=0, componentType=5126, count=len(mesh.vertices),
-#                                   type="VEC3", max=mesh.bounds[1].tolist(), min=mesh.bounds[0].tolist())
-#     accessor_indices = Accessor(bufferView=1, byteOffset=0, componentType=5123 if len(indices) < 65536 else 5125,
-#                                 count=len(indices), type="SCALAR")
-
-#     # Create Primitive and Mesh
-#     primitive = Primitive(attributes={"POSITION": 0}, indices=1)
-#     gltf_mesh = Mesh(primitives=[primitive])
-
-#     # Add data to GLTF
-#     gltf.buffers.append(buffer)
-#     gltf.bufferViews.append(vertex_buffer_view)
-#     gltf.bufferViews.append(index_buffer_view)
-#     gltf.accessors.append(accessor_positions)
-#     gltf.accessors.append(accessor_indices)
-#     gltf.meshes.append(gltf_mesh)
-
-#     # Create Node and Scene
-#     node = Node(mesh=0)
-#     scene = Scene(nodes=[0])
-#     gltf.nodes.append(node)
-#     gltf.scenes.append(scene)
-
-#     # Set asset metadata
-#     gltf.asset = Asset(generator="STL to GLTF Converter", version="2.0")
-
-#     # Save the file as .glb or .gltf
-#     if ending == "glb":
-#         gltf.convert_buffers(BufferFormat.BINARYBLOB)
-#         gltf.save(os.path.join(dest_path, f"{name}.glb"))
-#     else:
-#         gltf.save_json(os.path.join(dest_path, f"{name}.gltf"))
-
-#     print(f"File successfully converted to {dest_path}/{name}.{ending}")
-
+            idx += 1
 
 def convert_stl_to_gltf_bin(source_file_path, dest_path, name, export_format="GLTF_SEPARATE"):
     """
@@ -204,7 +84,6 @@ def convert_stl_to_gltf_bin(source_file_path, dest_path, name, export_format="GL
     bpy.ops.export_scene.gltf(filepath=output_file_path, export_format=export_format)
     
     print(f"File successfully converted to {output_file_path}")
-
 
 # Main function to run the conversion
 def ambientcg_formatting(source_dir, dest_dir, new_folder=True):
@@ -302,9 +181,12 @@ if __name__ == "__main__":
     # ambientcg_formatting(source_dir=source_dir, dest_dir=dest_dir,new_folder=False)
 
     # thingi10k_formatting(source_dir=source_dir, dest_dir=dest_dir)
-    thingi10k_formatting(source_dir="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", dest_dir="D:/Informatik/Projekte/3xM/model_material/final_models", use_ID=True)
+    # thingi10k_formatting(source_dir="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", dest_dir="D:/Informatik/Projekte/3xM/model_material/final_models", use_ID=True)
 
     # extract_gltf_from_subfolder(source_folder="/home/tobia/data/3xM/models/polyhaven", destination_folder="/home/tobia/data/3xM/models/polyhaven_prep", rm_src=False)
 
     # scale_stl(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSortedScaled")
+
+    convert_stl_to_glb(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/final_models")
+
 
