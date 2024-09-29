@@ -939,6 +939,31 @@ def unreal_renameing(source_path, output_path):
 
     print(f"\n Finish! Successfull renamed {counter} materials!")
 
+def change_type(source_path, dest_path):
+    for cur_dir in os.listdir(source_path):
+        for cur_file in os.listdir(os.path.join(source_path, cur_dir)):
+            cur_src_path = os.path.join(source_path, cur_dir, cur_file)
+            cur_dest_path = os.path.join(dest_path, cur_dir, f"{cur_file.split('.')[0]}.png")
+
+            os.makedirs(os.path.join(dest_path, cur_dir), exist_ok=True, mode=777)
+
+            with Image.open(cur_src_path) as img:
+                # Konvertiere das Bild in RGB, falls es im "P" (Palette) Modus ist
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+                
+                # Speichere das Bild im gewünschten Format
+                img.save(cur_dest_path, format='PNG')
+
+            # img = cv2.imread(cur_src_path)
+            # if img is None:
+            #     print(f"Fehler beim Laden des Bildes: {source_path}")
+            #     return
+
+            # cv2.imwrite(cur_dest_path, img)
+            print(f"Converted {cur_src_path} to {cur_dest_path}")
+    
+
 if __name__ == "__main__":
     # img_map_2_gltf(path="/home/tobia/")
 
@@ -952,6 +977,7 @@ if __name__ == "__main__":
     
     # unreal_prep_images(source_path="/home/tobia/data/3xM/materials/brian_500", output_path="/home/tobia/data/3xM/materials/brian_500_prep_ue")
 
-    unreal_renameing(source_path="D:/Informatik/Projekte/3xM/model_material/brian_500_prep_ue_ssim_index", output_path="D:/Informatik/Projekte/3xM/final_materials")
+    # unreal_renameing(source_path="D:/Informatik/Projekte/3xM/model_material/brian_500_prep_ue_ssim_index", output_path="D:/Informatik/Projekte/3xM/final_materials")
 
+    change_type(source_path="./final_materials", dest_path="./final_materials_UE")
 

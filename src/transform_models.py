@@ -61,6 +61,36 @@ def convert_stl_to_glb(source_path, output_path):
 
             idx += 1
 
+def convert_stl_to_fbx(source_path, output_path):
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
+    else:
+        os.makedirs(output_path, exist_ok=True)
+
+    idx = 0
+
+    for cur_file in os.listdir(source_path):
+        cur_path = os.path.join(source_path, cur_file)
+        if os.path.isfile(cur_path) and cur_file.endswith(".stl"):
+            output_fbx_file_path = os.path.join(output_path, f"3xM_Model_ID_{idx}.fbx")
+
+            # reset blender scene
+            bpy.ops.wm.read_factory_settings(use_empty=True)
+
+            # import stl file
+            bpy.ops.wm.stl_import(filepath=cur_path)
+
+            # choose every object
+            bpy.ops.object.select_all(action='SELECT')
+
+            # convert to mesh
+            bpy.ops.object.convert(target='MESH')
+
+            # export as glb file
+            bpy.ops.export_scene.fbx(filepath=output_fbx_file_path)
+
+            idx += 1
+
 def convert_stl_to_gltf_bin(source_file_path, dest_path, name, export_format="GLTF_SEPARATE"):
     """
     Converts an STL file to a GLTF file using Blender and bpy.
@@ -187,6 +217,9 @@ if __name__ == "__main__":
 
     # scale_stl(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSortedScaled")
 
-    convert_stl_to_glb(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/final_models")
+    # convert_stl_to_glb(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/final_models")
+
+
+    convert_stl_to_fbx(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/final_models")
 
 
