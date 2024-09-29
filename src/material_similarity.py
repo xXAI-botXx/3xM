@@ -87,7 +87,7 @@ if __name__ == "__main__":
     compare_folder = "D:/Informatik/Projekte/3xM/model_material/brian_500_compare" # "/home/tobia/data/3xM/materials/compare"  # Path to the comparison folder
     similarity_threshold = 0.8  # Similarity threshold
 
-    compare_materials_and_copy(material_folder, compare_folder, similarity_threshold, start_index=0, clear=False)
+    compare_materials_and_copy(material_folder, compare_folder, similarity_threshold, start_index=14561, clear=False)
 
 
 
