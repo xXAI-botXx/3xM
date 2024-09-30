@@ -206,10 +206,93 @@ def find_and_load_asset_by_name(asset_name, class_name=["Texture2D"]):
 
 
 
+# Neue Zeile in die Data Table einfügen
+def add_all_materials_to_datatable(source_path):
+    data_table_path = '/Game/material_data_table'
+    data_table = unreal.EditorAssetLibrary.load_asset(data_table_path)  
+    #  data_table = find_and_load_asset_by_name("material_data_table", class_names=["Data Table"])
+
+    print(dir(data_table))
+
+    existing_rows = data_table.get_editor_property("RowMap")
+
+    # Check, if Data Table got loaded
+    if data_table:
+        for cur_file in os.listdir(source_path):
+            cur_name = cur_file.split(".")[0]
+            material_path = f'/Game/3xM/Materials/{cur_name}'
+            material_asset = unreal.EditorAssetLibrary.load_asset(material_path)
+            # material_asset = find_and_load_asset_by_name(cur_name, class_names=["Material"])
+
+            row_name = unreal.Name(cur_name)
+        
+            # Prüfen, ob die Zeile bereits existiert
+            if row_name in existing_rows:
+                unreal.log_warning(f"Row {cur_name} already exists in the Data Table")
+                continue
+
+            # Neue Zeile als Dictionary vorbereiten (der Feldname 'Material' ist beispielhaft)
+            new_row = {"material": material_asset}
+
+            # Die Data Table modifizieren und die neue Zeile hinzufügen
+            data_table.modify()
+            existing_rows[row_name] = new_row
+            data_table.set_editor_property("RowMap", existing_rows)
+
+            # new_row = unreal.DataTableRow(row_struct)
+            # new_row.material = material_asset
+
+            # # Füge die Zeile zur Data Table hinzu
+            # row_name = unreal.Name(cur_name)
+            # data_table.add_row(row_name, new_row)
+
+            # new_row = unreal.DataTableRowHandle()
+            # new_row.row_name = unreal.Name(cur_name)
+
+            # # struct_type = unreal.find_class("material_data_table_struct")  
+            # # struct_type = unreal.EditorAssetLibrary.load_asset(struct_path).get_class()
+            # struct_type = unreal.EditorAssetLibrary.load_asset("material_data_table_struct").get_class()
+            # new_row_data = unreal.StructBase(struct_type)
+
+            # unreal.StructBase.set_editor_property(new_row_data, "material", material_asset)
+
+            # success = data_table.add_row(new_row.row_name, new_row_data)
+
+            # Load the Blueprint structure
+            # struct_path = '/Game/material_data_table_struct'
+            # struct = unreal.EditorAssetLibrary.load_blueprint_class(struct_path)
+            # struct = unreal.EditorAssetLibrary.load_asset(struct_path)
+
+            # Create Structure
+            # new_row = unreal.new_object(struct.get_class())
+            # new_row = unreal.StructBase(struct)  # Create an instance of the Blueprint structure
+                
+            # Manually set attributes
+            # new_row.set_editor_property('material', material_asset)
+            # new_row.material = material_asset
+
+            # unreal.EditorAssetLibrary.add_data_table_row(data_table, cur_name, material_asset)
+            
+            # Add the row data to the table
+            # data_table.add_row(cur_name, material_asset)
+            
+            # # Fill the fields
+            # new_row.RowName = cur_name
+            # new_row.material = material_asset
+            
+            # # Add the row data to the table
+            # data_table.add_row(row_name, material_asset)
+            print(f"Material {row_name} succefully added.")
+    else:
+        print(f"Error: Data Table could not get loaded.")
+
+
+
 print("#"*12)
 print("Start Material Import")
 MAKE_TEXTURES = False
 MAKE_MATERIALS = False
+MAKE_DATATABLE = True
 source_path = "D:/Informatik/Projekte/3xM/final_materials_UE"
 dest_path = "/Game/3xM/Textures"
 ending = ".png"
@@ -269,4 +352,8 @@ for cur_dir in os.listdir(source_path):
         fail += 1
 
 print(f"Finished Importing: Success: {success}\nFailed: {fail}")
+
+
+if MAKE_DATATABLE:
+    add_all_materials_to_datatable(source_path="D:/Informatik/Unreal Engine/dataset_gen_3xM/Content/3xM/Materials")
 

@@ -202,6 +202,24 @@ def scale_stl(source_path, output_path, target_size=1):
             scale_mesh.export(cur_export_stl_path)
 
 
+def get_license_from_stl_to_fbx(source_path):
+
+    idx = 0
+    license_text = "# 3D-Model Licesing\n\nFollowing Assignment, shows a ID for every used 3D-Model. You can see the creator with the ID in the 'Thingi10K Summary.xlsx'. All rights are reserved from the creator in the excel file. The 3D-Models are Royality Free. So name the creator, if using their Model.\n"
+
+    for cur_file in os.listdir(source_path):
+        cur_path = os.path.join(source_path, cur_file)
+        if os.path.isfile(cur_path) and cur_file.endswith(".stl"):
+            cur_name = ".".join(cur_file.split(".")[:-1])
+
+            license_text += f"\n - 3xM_Model_ID_{idx}.fbx -> ID: {cur_name}"
+
+            idx += 1
+
+    with open("./License-3D-Models.md", "w") as md_file:
+        md_file.write(license_text)
+
+
 if __name__ == "__main__":
     # Define your source directory containing folders which contains .jpg, .usdc, .obj, and .mtl files
     source_dir = '/home/tobia/data/3xM/models/Thingi10KSorted'
@@ -220,6 +238,7 @@ if __name__ == "__main__":
     # convert_stl_to_glb(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/final_models")
 
 
-    convert_stl_to_fbx(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/final_models")
+    # convert_stl_to_fbx(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted", output_path="D:/Informatik/Projekte/3xM/model_material/final_models")
 
+    # get_license_from_stl_to_fbx(source_path="D:/Informatik/Projekte/3xM/model_material/Thingi10KSorted")
 
