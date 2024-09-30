@@ -4,6 +4,12 @@
 /model_material/*
 /final_models/*
 /final_materials/*
+/3xM/*
+/3D-models/*
+/model_material/*
+/saves/*
+/final_materials_UE/*
+*/__pycache__/*
 
 # Visual Studio 2015 user specific files
 .vs/
