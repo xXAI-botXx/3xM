@@ -10,6 +10,12 @@ This project contains:
 
 Before you use any of my work, please check my [license](./LICENSE) and [my section for license](#license).
 
+### In Short
+I created a dataset to analyze the behaviour of 3D-Models and Materials to the accuracy of instance segmentation.
+
+Feel free to use my Unreal Engine 5 project, to create your own dataset for instance segmentation. You can add your own 3D-Models and Materials and also control the used amount of Materials/3D-Models.
+
+
 ### Explanation
 (reference to your bachelor work)
 
@@ -34,10 +40,29 @@ To start the traingeneration, you have to start the UE5 Editor, then open the pr
 - **ImageHeight** <br>Height of the ceated images from the scene (raw and mask).
 - **DataSavePath** <br>Path to the folder, where the datasets should get created.
 
+
 Update: The project is **only available in Windows** because of a used Plugin, called [Victory BP by Rama](https://forums.unrealengine.com/t/ramas-extra-blueprint-nodes-for-ue5-no-c-required/231476).
 
+To add your own Materials and 3D-Models you have to edit the material_data_table and the model_data_tables. 
+
+And to clear a confusion about the **ModelAmounts** and about **MaterialAmounts**, this datagenerator is created to generate multiple datasets with different amounts of materials and 3D-Models. If you just want to generate a random dataset just give these arrays one value with the max amount of your available materials and models.
+
+At least very important are the random/changing factors for the datageneration. Here are all changing elements:
+- Bin-Material
+- Ground-Material
+- Position of the objects
+- Amount of objects
+- The camera position
+  - There are 3 fix camera positions and in the top camera the camera will randomly rotate in the Z-axis
+- 3D-Models of the objects (depends on the ModelAmounts parameter)
+- Materials of the objects (depends on the MaterialAmounts parameter)
+
+-> You can change all of these factors. The camera will be a bit more tricky (you have to add a new cinematic camera and add a "05_camera" tag -> search for "tag" in the properties and set both tags to "05_camera", then it should be included in the random selection). For the other parameters you can just change the variables and the data-tables in the content browser.
+
+
+
 <details>
-  <summary>But here is the Linux installation of UE5 if you want...</summary>
+  <summary>Here is the Linux installation of UE5 if you want... (not recommend)</summary>
 
 - Linux:
     - First install all imortant requirements:
@@ -86,7 +111,7 @@ Update: The project is **only available in Windows** because of a used Plugin, c
 
 ### 3xM Dataset
 
-The dataset structure is like:
+In the dataset structure every dataset get his own top folder with a ID (most likely not relevant) and the amount of (unique) 3D-Models followed by the amount of used (unique) Materials in the whole dataset. Then every scene have it's own subfolder with the mask file and the normal rgb-image:
 Folder-Names = 3xM_dataset-ID_model-amount_material-amount
 
 ```
