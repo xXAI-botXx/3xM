@@ -1,3 +1,7 @@
+
+https://github.com/user-attachments/assets/9b8a02d3-8ced-48ac-8530-703bb0be2ecf
+
+
 # 3xM
 Model-Material-Mixture Dataset for Instance-Segmentation
 
