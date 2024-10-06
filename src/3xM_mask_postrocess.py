@@ -85,7 +85,7 @@ def mask_postprocess(source_path, format=FORMATS.SINGLE_SCENE_DIR):
         pass
 
 
-def to_dual_dir_and_mask_postprocess(source_path, output_path):
+def to_dual_dir_and_mask_postprocess(source_path, output_path, with_subfolders=True):
     """
     Change SINGLE_DCENE_DIR Format to DUAL_DIR format and make mask postprocess.
 
@@ -123,11 +123,18 @@ def to_dual_dir_and_mask_postprocess(source_path, output_path):
     # for cur_scene_dir in os.listdir(source_path):
     #     task_list += [lambda: move_scene_files(source_path, cur_scene_dir, mask_path, color_path, idx)]
     #     idx += 1
+    
+    if with_subfolders:
+        all_scenes = []
+        for cur_dir in os.listdir(source_path):
+            all_scenes += os.listdir(os.path.join(source_path, cur_dir))
+    else:
+        all_scenes = os.listdir(source_path)
         
     # run all tasks as fast as possible
     Parallel(n_jobs=-1)(
         delayed(move_scene_files)(source_path, cur_scene_dir, mask_path, color_path, idx)
-        for idx, cur_scene_dir in enumerate(os.listdir(source_path))
+        for idx, cur_scene_dir in enumerate(all_scenes)
     )
 
 
