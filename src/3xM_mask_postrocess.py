@@ -51,6 +51,8 @@ def rgb_mask_to_grey_mask(rgb_img):
         if not np.array_equal(cur_rgb_value, [0, 0, 0]):  # Exclude black
             rgb_to_grey[tuple(cur_rgb_value)] = counter
             counter += 1
+        else:
+            rgb_to_grey[tuple([0, 0, 0])] = 0
 
     # Fill the grey mask using the mapping
     for y in range(height):
@@ -109,6 +111,9 @@ def to_dual_dir_and_mask_postprocess(source_path, output_path):
 
     mask_path = os.path.join(output_path, "masks")
     color_path = os.path.join(output_path, "color_images")
+    
+    os.makedirs(mask_path, exist_ok=True)
+    os.makedirs(color_path, exist_ok=True)
 
     idx = 0
     for cur_scene_dir in os.listdir(source_path):
@@ -133,7 +138,9 @@ if __name__ == "__main__":
     # source_path = "D:/Informatik/Projekte/3xM/3xM"
     # mask_postprocess(source_path=source_path)
 
-    source_path = "/home/local-admin/data/3xM/3xM_0_1_1"
-    to_dual_dir_and_mask_postprocess(source_path=source_path)
+    cur_dataset = "3xM_Dataset_0_1_1"
+    source_path = f"/home/local-admin/Downloads/{cur_dataset}"   # /{cur_dataset}
+    output_path = f"/home/local-admin/data/3xM/{cur_dataset}"
+    to_dual_dir_and_mask_postprocess(source_path=source_path, output_path=output_path)
 
 
