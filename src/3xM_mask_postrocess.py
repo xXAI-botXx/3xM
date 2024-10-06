@@ -146,11 +146,14 @@ def move_scene_files(cur_scene_dir, source_path, mask_path, color_path, idx):
                 grey_mask = rgb_mask_to_grey_mask(mask_rgb_img)
                 
         elif cur_file.startswith("raw"):
-            rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file))
+            # rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file))
+            rgb_img = os.path.join(source_path, cur_scene_dir, cur_file)
 
     if rgb_img is not None and grey_mask is not None:
         cv2.imwrite(os.path.join(mask_path, f"image_{idx:08}.png"), grey_mask)
-        cv2.imwrite(os.path.join(color_path, f"image_{idx:08}.png"), rgb_img)
+        # cv2.imwrite(os.path.join(color_path, f"image_{idx:08}.png"), rgb_img)
+        shutil.copy(rgb_img, os.path.join(color_path, f"image_{idx:08}.png"))
+
 
 def to_dual_dir_and_mask_postprocess(source_path, output_path, max_workers=4):
     """
