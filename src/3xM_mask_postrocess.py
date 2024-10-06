@@ -121,12 +121,12 @@ def to_dual_dir_and_mask_postprocess(source_path, output_path):
         rgb_img = None
         for cur_file in os.listdir(os.path.join(source_path, cur_scene_dir)):
             if cur_file.startswith("mask"):
-                mask_rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file))
+                mask_rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file), cv2.IMREAD_UNCHANGED)
                 if mask_rgb_img is not None:
                     grey_mask = rgb_mask_to_grey_mask(mask_rgb_img)
                     
             elif cur_file.startswith("raw"):
-                rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file))
+                rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file), cv2.IMREAD_UNCHANGED)
                 
         if rgb_img is not None and grey_mask is not None:
             cv2.imwrite(os.path.join(mask_path, f"image_{idx:08}.png"), grey_mask)
