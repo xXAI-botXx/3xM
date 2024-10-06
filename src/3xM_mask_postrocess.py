@@ -127,29 +127,32 @@ def to_dual_dir_and_mask_postprocess(source_path, output_path, with_subfolders=T
     if with_subfolders:
         all_scenes = []
         for cur_dir in os.listdir(source_path):
-            all_scenes += os.listdir(os.path.join(source_path, cur_dir))
+            for cur_scene in os.listdir(os.path.join(source_path, cur_dir)):
+                all_scenes += [os.path.join(source_path, cur_dir, cur_scene)]
     else:
-        all_scenes = os.listdir(source_path)
+        all_scenes = []
+        for cur_scene in os.listdir(source_path):
+                all_scenes += [os.path.join(source_path, cur_scene)]
         
     # run all tasks as fast as possible
     Parallel(n_jobs=-1)(
-        delayed(move_scene_files)(source_path, cur_scene_dir, mask_path, color_path, idx)
+        delayed(move_scene_files)(cur_scene_dir, mask_path, color_path, idx)
         for idx, cur_scene_dir in enumerate(all_scenes)
     )
 
 
-def move_scene_files(source_path, cur_scene_dir, mask_path, color_path, idx):
+def move_scene_files(cur_scene_dir, mask_path, color_path, idx):
     grey_mask = None
     rgb_img = None
-    for cur_file in os.listdir(os.path.join(source_path, cur_scene_dir)):
+    for cur_file in os.listdir(cur_scene_dir):
         if cur_file.startswith("mask"):
-            mask_rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file))
+            mask_rgb_img = cv2.imread(os.path.join(cur_scene_dir, cur_file))
             if mask_rgb_img is not None:
                 grey_mask = rgb_mask_to_grey_mask(mask_rgb_img)
                 
         elif cur_file.startswith("raw"):
-            # rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file))
-            rgb_img = os.path.join(source_path, cur_scene_dir, cur_file)
+            # rgb_img = cv2.imread(os.path.join(cur_scene_dir, cur_file))
+            rgb_img = os.path.join(cur_scene_dir, cur_file)
 
     if rgb_img is not None and grey_mask is not None:
         cv2.imwrite(os.path.join(mask_path, f"image_{idx:08}.png"), grey_mask)
