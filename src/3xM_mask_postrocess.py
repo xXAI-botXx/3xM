@@ -1,4 +1,5 @@
 import os
+import shutil
 from enum import Enum
 
 import numpy as np
@@ -80,8 +81,59 @@ def mask_postprocess(source_path, format=FORMATS.SINGLE_SCENE_DIR):
         pass
 
 
+def to_dual_dir_and_mask_postprocess(source_path, output_path):
+    """
+    Change SINGLE_DCENE_DIR Format to DUAL_DIR format and make mask postprocess.
+
+    From:
+    cam_1
+    ........raw_1.png
+    ........mask_1.png
+    cam_2
+    ...
+
+    to
+
+    color_images
+    ........raw_1.png
+    ........raw_2.png
+    ...
+    masks
+    ........mask_1.png
+    ...
+    """
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
+    
+    os.makedirs(output_path, exist_ok=True)
+
+    mask_path = os.path.join(output_path, "masks")
+    color_path = os.path.join(output_path, "color_images")
+
+    idx = 0
+    for cur_scene_dir in os.listdir(source_path):
+        grey_mask = None
+        rgb_img = None
+        for cur_file in os.listdir(os.path.join(source_path, cur_scene_dir)):
+            if cur_file.startswith("mask"):
+                mask_rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file))
+                if mask_rgb_img is not None:
+                    grey_mask = rgb_mask_to_grey_mask(mask_rgb_img)
+                    
+            elif cur_file.startswith("raw"):
+                rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file))
+                
+        if rgb_img is not None and grey_mask is not None:
+            cv2.imwrite(os.path.join(mask_path, f"image_{idx:08}.png"), grey_mask)
+            cv2.imwrite(os.path.join(color_path, f"image_{idx:08}.png"), rgb_img)
+            idx += 1
+
+
 if __name__ == "__main__":
-    source_path = "D:/Informatik/Projekte/3xM/3xM"
-    mask_postprocess(source_path=source_path)
+    # source_path = "D:/Informatik/Projekte/3xM/3xM"
+    # mask_postprocess(source_path=source_path)
+
+    source_path = "/home/local-admin/data/3xM/3xM_0_1_1"
+    to_dual_dir_and_mask_postprocess(source_path=source_path)
 
 

@@ -10,6 +10,7 @@
 /saves/*
 /final_materials_UE/*
 */__pycache__/*
+/3xM-Test/*
 
 # Visual Studio 2015 user specific files
 .vs/
