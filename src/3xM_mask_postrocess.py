@@ -5,7 +5,7 @@ from enum import Enum
 import numpy as np
 import cv2
 
-from concurrent.futures import ThreadPoolExecutor
+from joblib import Parallel, delayed
 
 class FORMATS(Enum):
     SINGLE_SCENE_DIR = 0
@@ -85,58 +85,53 @@ def mask_postprocess(source_path, format=FORMATS.SINGLE_SCENE_DIR):
         pass
 
 
-# def to_dual_dir_and_mask_postprocess(source_path, output_path):
-#     """
-#     Change SINGLE_DCENE_DIR Format to DUAL_DIR format and make mask postprocess.
+def to_dual_dir_and_mask_postprocess(source_path, output_path):
+    """
+    Change SINGLE_DCENE_DIR Format to DUAL_DIR format and make mask postprocess.
 
-#     From:
-#     cam_1
-#     ........raw_1.png
-#     ........mask_1.png
-#     cam_2
-#     ...
+    From:
+    cam_1
+    ........raw_1.png
+    ........mask_1.png
+    cam_2
+    ...
 
-#     to
+    to
 
-#     color_images
-#     ........raw_1.png
-#     ........raw_2.png
-#     ...
-#     masks
-#     ........mask_1.png
-#     ...
-#     """
-#     if os.path.exists(output_path):
-#         shutil.rmtree(output_path)
+    color_images
+    ........raw_1.png
+    ........raw_2.png
+    ...
+    masks
+    ........mask_1.png
+    ...
+    """
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
     
-#     os.makedirs(output_path, exist_ok=True)
+    os.makedirs(output_path, exist_ok=True)
 
-#     mask_path = os.path.join(output_path, "masks")
-#     color_path = os.path.join(output_path, "color_images")
+    mask_path = os.path.join(output_path, "masks")
+    color_path = os.path.join(output_path, "color_images")
     
-#     os.makedirs(mask_path, exist_ok=True)
-#     os.makedirs(color_path, exist_ok=True)
+    os.makedirs(mask_path, exist_ok=True)
+    os.makedirs(color_path, exist_ok=True)
+    
+    # task_list = []
 
-#     idx = 0
-#     for cur_scene_dir in os.listdir(source_path):
-#         grey_mask = None
-#         rgb_img = None
-#         for cur_file in os.listdir(os.path.join(source_path, cur_scene_dir)):
-#             if cur_file.startswith("mask"):
-#                 mask_rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file))
-#                 if mask_rgb_img is not None:
-#                     grey_mask = rgb_mask_to_grey_mask(mask_rgb_img)
-                    
-#             elif cur_file.startswith("raw"):
-#                 rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file))
-                
-#         if rgb_img is not None and grey_mask is not None:
-#             cv2.imwrite(os.path.join(mask_path, f"image_{idx:08}.png"), grey_mask)
-#             cv2.imwrite(os.path.join(color_path, f"image_{idx:08}.png"), rgb_img)
-#             idx += 1
+    # idx = 0
+    # for cur_scene_dir in os.listdir(source_path):
+    #     task_list += [lambda: move_scene_files(source_path, cur_scene_dir, mask_path, color_path, idx)]
+    #     idx += 1
+        
+    # run all tasks as fast as possible
+    Parallel(n_jobs=-1)(
+        delayed(move_scene_files)(source_path, cur_scene_dir, mask_path, color_path, idx)
+        for idx, cur_scene_dir in enumerate(os.listdir(source_path))
+    )
 
 
-def move_scene_files(cur_scene_dir, source_path, mask_path, color_path, idx):
+def move_scene_files(source_path, cur_scene_dir, mask_path, color_path, idx):
     grey_mask = None
     rgb_img = None
     for cur_file in os.listdir(os.path.join(source_path, cur_scene_dir)):
@@ -153,36 +148,6 @@ def move_scene_files(cur_scene_dir, source_path, mask_path, color_path, idx):
         cv2.imwrite(os.path.join(mask_path, f"image_{idx:08}.png"), grey_mask)
         # cv2.imwrite(os.path.join(color_path, f"image_{idx:08}.png"), rgb_img)
         shutil.copy(rgb_img, os.path.join(color_path, f"image_{idx:08}.png"))
-
-
-def to_dual_dir_and_mask_postprocess(source_path, output_path, max_workers=4):
-    """
-    Change SINGLE_DCENE_DIR Format to DUAL_DIR format and make mask postprocess.
-    """
-    if os.path.exists(output_path):
-        shutil.rmtree(output_path)
-    
-    os.makedirs(output_path, exist_ok=True)
-
-    mask_path = os.path.join(output_path, "masks")
-    color_path = os.path.join(output_path, "color_images")
-    
-    os.makedirs(mask_path, exist_ok=True)
-    os.makedirs(color_path, exist_ok=True)
-
-    scene_dirs = os.listdir(source_path)
-    
-    # Parallel processing using ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = []
-        for idx, cur_scene_dir in enumerate(scene_dirs):
-            futures.append(executor.submit(
-                move_scene_files, cur_scene_dir, source_path, mask_path, color_path, idx
-            ))
-        
-        # Optionally wait for all futures to complete
-        for future in futures:
-            future.result()
 
 
 if __name__ == "__main__":
