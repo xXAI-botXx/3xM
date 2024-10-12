@@ -292,7 +292,7 @@ print("#"*12)
 print("Start Material Import")
 MAKE_TEXTURES = False
 MAKE_MATERIALS = False
-MAKE_DATATABLE = True
+MAKE_DATATABLE = False
 source_path = "D:/Informatik/Projekte/3xM/final_materials_UE"
 dest_path = "/Game/3xM/Textures"
 ending = ".png"

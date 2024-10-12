@@ -70,19 +70,14 @@ def rgb_mask_to_grey_mask(rgb_img):
 
     return grey_mask
 
-def mask_postprocess(source_path, format=FORMATS.SINGLE_SCENE_DIR):
-    if format == FORMATS.SINGLE_SCENE_DIR:
-        for cur_dataset_dir in os.listdir(source_path):
-            for cur_scene_dir in os.listdir(os.path.join(source_path, cur_dataset_dir)):
-                for cur_file in os.listdir(os.path.join(source_path, cur_dataset_dir, cur_scene_dir)):
-                    if cur_file.startswith("mask"):
-                        mask_rgb_img = cv2.imread(os.path.join(source_path, cur_dataset_dir, cur_scene_dir, cur_file))
-                        if mask_rgb_img is not None:
-                            grey_mask = rgb_mask_to_grey_mask(mask_rgb_img)
-                            cv2.imwrite(os.path.join(source_path, cur_dataset_dir, cur_scene_dir, f"grey_{cur_file}"), grey_mask)
-
-    elif format == FORMATS.DUAL_DIR:
-        pass
+def mask_postprocess_single_scene_dir(source_path, format=FORMATS.SINGLE_SCENE_DIR):
+    for cur_scene_dir in os.listdir(source_path):
+        for cur_file in os.listdir(os.path.join(source_path, cur_scene_dir)):
+            if cur_file.startswith("mask"):
+                mask_rgb_img = cv2.imread(os.path.join(source_path, cur_scene_dir, cur_file))
+                if mask_rgb_img is not None:
+                    grey_mask = rgb_mask_to_grey_mask(mask_rgb_img)
+                    cv2.imwrite(os.path.join(source_path, cur_scene_dir, f"grey_{cur_file}"), grey_mask)
 
 
 def to_dual_dir_and_mask_postprocess(source_path, output_path, with_subfolders=True):
@@ -159,6 +154,36 @@ def move_scene_files(cur_scene_dir, mask_path, color_path, idx):
         # cv2.imwrite(os.path.join(color_path, f"image_{idx:08}.png"), rgb_img)
         shutil.copy(rgb_img, os.path.join(color_path, f"image_{idx:08}.png"))
 
+def mask_postprocess(mask_source_path, mask_output_path):
+    """
+    Make mask postprocess.
+    """
+    if os.path.exists(mask_output_path):
+        shutil.rmtree(mask_output_path)
+    
+    os.makedirs(mask_output_path, exist_ok=True)
+
+    all_masks = []
+    for cur_mask in os.listdir(mask_source_path):
+        if any([cur_mask.endswith(i) for i in [".png", ".jpg"]]):
+            all_masks += [cur_mask]
+        
+    # run all tasks as fast as possible
+    Parallel(n_jobs=-1)(
+        delayed(move_mask)(cur_mask_name, mask_source_path, mask_output_path)
+        for cur_mask_name in all_scenes
+    )
+
+def move_mask(mask_name, source, output):
+    mask_rgb_img = cv2.imread(os.path.join(source, mask_name))
+    if mask_rgb_img is not None:
+        grey_mask = rgb_mask_to_grey_mask(mask_rgb_img)
+        cv2.imwrite(os.path.join(output, mask_name), grey_mask)
+
+
+def coco_postprocess(image_path, mask_path, output_path):
+    pass
+
 
 if __name__ == "__main__":
     # source_path = "D:/Informatik/Projekte/3xM/3xM"
@@ -167,6 +192,12 @@ if __name__ == "__main__":
     cur_dataset = "3xM_Dataset_0_1_1"
     source_path = f"/home/local-admin/Downloads/{cur_dataset}"   # /{cur_dataset}
     output_path = f"/home/local-admin/data/3xM/{cur_dataset}"
-    to_dual_dir_and_mask_postprocess(source_path=source_path, output_path=output_path)
+    # to_dual_dir_and_mask_postprocess(source_path=source_path, output_path=output_path)
+
+    mask_source_path = f"/home/local-admin/Downloads/{cur_dataset}/masks"
+    mask_output_path = f"/home/local-admin/Downloads/{cur_dataset}/masks-prep"
+    mask_postprocess(mask_source_path=mask_source_path, mask_output_path=mask_output_path)
+
+    # coco_postprocess
 
 

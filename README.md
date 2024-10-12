@@ -12,7 +12,7 @@ This project contains:
 - (The Materials)
 - (The 3D-Models)
 
-Before you use any of my work, please check my [license](./LICENSE) and [my section for license](#license).
+Before you use any of my work, please check my [my section for license](#license).
 
 ### In Short
 I created a dataset to analyze the behaviour of 3D-Models and Materials to the accuracy of instance segmentation.
@@ -20,12 +20,8 @@ I created a dataset to analyze the behaviour of 3D-Models and Materials to the a
 Feel free to use my Unreal Engine 5 project, to create your own dataset for instance segmentation. You can add your own 3D-Models and Materials and also control the used amount of Materials/3D-Models.
 
 
-### Explanation
-(reference to your bachelor work)
-
-
 ### Unreal Engine 5 Datagenerator
-You can download my UE5 project [here](https://drive.google.com/drive/folders/1oR5vuiZkV9cdTlgUpzvDcJ6WtvkyXvRa?usp=sharing).
+You can download my UE5 project [here](https://1drv.ms/u/s!AqSTBkFULemxkfZHwY6SLVvdCwjpxA?e=1RhK1u). Or you can find all important files without the shapes/meshes and textures/materials in the [unreal_engine_544_project folder](./unreal_engine_544_project/).
 
 You have to download and install UE5. Following I will give you a small guide for the installation.
 - Windows:
@@ -34,7 +30,7 @@ You have to download and install UE5. Following I will give you a small guide fo
     - Then you can choose the Unreal Engine version **5.4.4**
 
 
-To start the traingeneration, you have to start the UE5 Editor, then open the project (you can just move the downloaded UE5 project to the official project folder from your UE5 Editor).<br>After this step you click on "Content Drawer" and then click on the "data_gen" Level. This will open the Level for datageneration.<br>On the left will be the variables and some of them should be set by yourself. I list them following (the first 8 Variables):
+To start the traingeneration, you have to start the UE5 Editor, then open the project (you can just move the downloaded UE5 project to the official project folder from your UE5 Editor).<br>After this step you click on "Content Drawer" and then click on the "data_gen" Level. This will open the Level for datageneration.<br>On the left will be the variables and some of them should be set by yourself. I list them following (the first 9 Variables):
 - **ModelAmounts**<br>An array with integer values how many 3D-Models should be used for every dataset
 - **MaterialAmounts** <br>An array with integer values how many Materials should be used for every dataset
 - **ObjectAmountMIN** <br>Minimum amount of objects/items per scene.
@@ -42,12 +38,13 @@ To start the traingeneration, you have to start the UE5 Editor, then open the pr
 - **DataAmountPerDataset** <br>Defines the numbers of images/scenes created for one dataset.
 - **ImageWidth** <br>Width of the ceated images from the scene (raw and mask).
 - **ImageHeight** <br>Height of the ceated images from the scene (raw and mask).
+- **DualDirFormat** <br>Decides if the saving format. True will create 2 folders, one for rgb, one for the masks. False will create a subfolder for every scene with the rgb and the mask inside.
 - **DataSavePath** <br>Path to the folder, where the datasets should get created.
 
 
 Update: The project is **only available in Windows** because of a used Plugin, called [Victory BP by Rama](https://forums.unrealengine.com/t/ramas-extra-blueprint-nodes-for-ue5-no-c-required/231476).
 
-To add your own Materials and 3D-Models you have to edit the material_data_table and the model_data_tables. 
+To add your own Materials and 3D-Models you have to edit the material_data_table and the model_data_tables. You should think to add collision to your meshes. Just open your mesh and apply a convex hull.
 
 And to clear a confusion about the **ModelAmounts** and about **MaterialAmounts**, this datagenerator is created to generate multiple datasets with different amounts of materials and 3D-Models. If you just want to generate a random dataset just give these arrays one value with the max amount of your available materials and models.
 
@@ -63,6 +60,8 @@ At least very important are the random/changing factors for the datageneration. 
 
 -> You can change all of these factors. The camera will be a bit more tricky (you have to add a new cinematic camera and add a "05_camera" tag -> search for "tag" in the properties and set both tags to "05_camera", then it should be included in the random selection). For the other parameters you can just change the variables and the data-tables in the content browser.
 
+
+> If you haven't a good GPU, you can use a remote GPU. There are many different services which give you remote access PC. For example: [Shadow](https://shadow.tech/de-DE).
 
 
 <details>
@@ -151,7 +150,7 @@ For Materials I used the paid version from [Brian](https://freepbr.com/).
 
 ### License
 
-All my work can be used with GNU Public License. All rights on the 3D-Models are reserved from other people. See the [Thinngi10k Summary.xlsx](./Thingi10K%20Summary.xlsx) for the persons and the rights. And check out the [License-3D-Models.md](./License-3D-Models.md) for finding the right ID for the model. All Material rights are also reserved. You have to buy them on [https://freepbr.com/](https://freepbr.com/) if you want to use them commercially.
+My unreal engine project, my Materials and my Meshes are all based on [the licensing on the unreal engine](https://www.unrealengine.com/en-US/license). They can only be used under the terms of Epic games.
 
 
 
