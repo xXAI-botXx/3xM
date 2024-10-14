@@ -10,7 +10,7 @@ This project contains:
 - The generated Dataset and Information about it (link)
 - The Unreal Engine 5 Datageneration Project
 - (The Materials)
-- (The 3D-Models)
+- (The Shapes)
 
 Before you use any of my work, please check my [my section for license](#license).
 
@@ -21,7 +21,7 @@ Feel free to use my Unreal Engine 5 project, to create your own dataset for inst
 
 
 ### Unreal Engine 5 Datagenerator
-You can download my UE5 project [here](https://1drv.ms/u/s!AqSTBkFULemxkfZHwY6SLVvdCwjpxA?e=1RhK1u). Or you can find all important files without the shapes/meshes and textures/materials in the [unreal_engine_544_project folder](./unreal_engine_544_project/).
+You can download my UE5 project [here](https://1drv.ms/f/s!AqSTBkFULemxkrkvU3_O7QYndLNeFw?e=h2FfDM). Or you can find all important files without the shapes/meshes and textures/materials in the [unreal_engine_544_project folder](./unreal_engine_544_project/).
 
 You have to download and install UE5. Following I will give you a small guide for the installation.
 - Windows:
@@ -30,7 +30,7 @@ You have to download and install UE5. Following I will give you a small guide fo
     - Then you can choose the Unreal Engine version **5.4.4**
 
 
-To start the traingeneration, you have to start the UE5 Editor, then open the project (you can just move the downloaded UE5 project to the official project folder from your UE5 Editor).<br>After this step you click on "Content Drawer" and then click on the "data_gen" Level. This will open the Level for datageneration.<br>On the left will be the variables and some of them should be set by yourself. I list them following (the first 9 Variables):
+To start the traingeneration, you have to start the UE5 Editor, then open the project (you can just move the downloaded UE5 project to the official project folder from your UE5 Editor).<br>After this step you click on "Content Drawer" and then click on the "data_gen" Level. This will open the Level for datageneration.<br>On the left will be the variables and some of them should be set by yourself. I list them following (the first 12 Variables):
 - **ModelAmounts**<br>An array with integer values how many 3D-Models should be used for every dataset
 - **MaterialAmounts** <br>An array with integer values how many Materials should be used for every dataset
 - **ObjectAmountMIN** <br>Minimum amount of objects/items per scene.
@@ -40,6 +40,9 @@ To start the traingeneration, you have to start the UE5 Editor, then open the pr
 - **ImageHeight** <br>Height of the ceated images from the scene (raw and mask).
 - **DualDirFormat** <br>Decides if the saving format. True will create 2 folders, one for rgb, one for the masks. False will create a subfolder for every scene with the rgb and the mask inside.
 - **DataSavePath** <br>Path to the folder, where the datasets should get created.
+- **TimeLimit** <br>Time (in seconds) until the scene will be frozen and rendered, whether some items are still moving or not.
+- **MinSize** <br>The minimum size of items.
+- **MaxSize** <br>The maximum size of items.
 
 
 Update: The project is **only available in Windows** because of a used Plugin, called [Victory BP by Rama](https://forums.unrealengine.com/t/ramas-extra-blueprint-nodes-for-ue5-no-c-required/231476).
@@ -114,6 +117,7 @@ At least very important are the random/changing factors for the datageneration. 
 
 ### 3xM Dataset
 
+<!--
 In the dataset structure every dataset get his own top folder with a ID (most likely not relevant) and the amount of (unique) 3D-Models followed by the amount of used (unique) Materials in the whole dataset. Then every scene have it's own subfolder with the mask file and the normal rgb-image:
 Folder-Names = 3xM_dataset-ID_model-amount_material-amount
 
@@ -131,21 +135,51 @@ Folder-Names = 3xM_dataset-ID_model-amount_material-amount
 ----| 3xM_1_1_2
 ...
 ```
+-->
+
+In the dataset structure every dataset get his own top folder the amount of (unique) 3D-Models followed by the amount of used (unique) Materials in the whole dataset. Every dataset have 2 folders. One for the RGB raw images and one folder with the mask images:
+
+```
+----| 3xM_Dataset_1_1
+------------| rgb
+-------------------- 3xM_0_1_1.png
+-------------------- 3xM_1_1_1.png
+------------| mask
+-------------------- 3xM_0_1_1.png
+-------------------- 3xM_1_1_1.png
+-------------------- ...
+-------------------- ...
+----| 3xM_Dataset_1_2
+...
+```
+
+Folder-Names = 3xM_Dataset_\*mesh-amount\*_\*material-amount\* <br>
+File-Names = 3xM_\*ID\*\_\*mesh-amount\*_\*material-amount\*.png
 
 The Mask-Images are basic RGB Images. Where all pixel values with the value 0 are the background and every other pixel value stand for one object. Every object have a unique pixel value.<br>You can also transfom the dataset to a grey image, where 0 is again the background and every pixel is also again one object, but now with only one channel and the numbers are increasing (1, 2, 3, 4, ...).
 
-For this mask postprocess (reommended), just run the [3xM_mask_postprocess.py](./src/3xM_mask_postrocess.py). You can use anaconda to install a working python environment for that postprocess: conda create -f ./windows_env.yml
+For this mask postprocess (recommended), just run the [3xM_mask_postprocess.py](./src/3xM_mask_postrocess.py). You can use anaconda to install a working python environment for that postprocess: 
+```terminal
+conda create -f ./windows_env.yml
+```
 
 
 ### Data-Source
 
-Subset of [Thingi10k](https://ten-thousand-models.appspot.com/), please see the [Thingi10k Summary.xlsx](Thingi10K Summary.xlsx) to see the creator of these models. I also used a few 3D-models from [polyhaven](https://polyhaven.com/).
+For Shapes a subset from [Quixel Megascans](https://quixel.com/megascans) are used.
 
-The process of finding good fitting models:
-- only unique 3D-Models (no double or too similar models)
-- the 3D-Model have to be connected (not 2 or more seperated parts)
+The process of finding good fitting shapes:
+- only unique Shapes (no double or too similar shapes)
+- the Shape have to be connected (not 2 or more seperated parts)
 
-For Materials I used the paid version from [Brian](https://freepbr.com/).
+
+
+For Materials a subset from [Quixel Megascans](https://quixel.com/megascans) are used.
+
+The process of finding good fitting materials:
+- only unique Materials (no double or too similar materials)
+- the Material should not contain different big Shapes
+- the Material should not contains wholes, which don't correlate to a shape
 
 
 ### License
