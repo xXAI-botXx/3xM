@@ -171,7 +171,7 @@ def mask_postprocess(mask_source_path, mask_output_path):
     # run all tasks as fast as possible
     Parallel(n_jobs=-1)(
         delayed(move_mask)(cur_mask_name, mask_source_path, mask_output_path)
-        for cur_mask_name in all_scenes
+        for cur_mask_name in all_masks
     )
 
 def move_mask(mask_name, source, output):
@@ -189,13 +189,14 @@ if __name__ == "__main__":
     # source_path = "D:/Informatik/Projekte/3xM/3xM"
     # mask_postprocess(source_path=source_path)
 
-    cur_dataset = "3xM_Dataset_0_1_1"
-    source_path = f"/home/local-admin/Downloads/{cur_dataset}"   # /{cur_dataset}
-    output_path = f"/home/local-admin/data/3xM/{cur_dataset}"
+    cur_system = "/home/tobia"
+    cur_dataset = "3xM_Dataset_1_10_TEST"
+    source_path = f"~/Downloads/{cur_dataset}"   # /{cur_dataset}
+    output_path = f"~/data/3xM/{cur_dataset}"
     # to_dual_dir_and_mask_postprocess(source_path=source_path, output_path=output_path)
 
-    mask_source_path = f"/home/local-admin/Downloads/{cur_dataset}/masks"
-    mask_output_path = f"/home/local-admin/Downloads/{cur_dataset}/masks-prep"
+    mask_source_path = f"{cur_system}/Downloads/{cur_dataset}/mask"
+    mask_output_path = f"{cur_system}/Downloads/{cur_dataset}/mask-prep"
     mask_postprocess(mask_source_path=mask_source_path, mask_output_path=mask_output_path)
 
     # coco_postprocess
