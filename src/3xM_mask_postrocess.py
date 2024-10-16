@@ -7,6 +7,11 @@ import cv2
 
 from joblib import Parallel, delayed
 
+from pycocotools import mask
+import json
+
+
+
 class FORMATS(Enum):
     SINGLE_SCENE_DIR = 0
     DUAL_DIR = 1
@@ -181,8 +186,75 @@ def move_mask(mask_name, source, output):
         cv2.imwrite(os.path.join(output, mask_name), grey_mask)
 
 
-def coco_postprocess(image_path, mask_path, output_path):
-    pass
+def create_coco_annotation(image_id, category_id, binary_mask, annotation_id):
+    # Get the contours for the mask
+    contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    segmentation = []
+
+    for contour in contours:
+        contour = contour.flatten().tolist()
+        if len(contour) > 4:  # At least 2 points for a polygon
+            segmentation.append(contour)
+    
+    rle = mask.encode(np.asfortranarray(binary_mask))  # RLE encoding
+    bbox = cv2.boundingRect(binary_mask)  # Bounding box
+    area = mask.area(rle)
+
+    annotation = {
+        "id": annotation_id,
+        "image_id": image_id,
+        "category_id": category_id,
+        "segmentation": segmentation,
+        "area": float(area),
+        "bbox": [bbox[0], bbox[1], bbox[2], bbox[3]],
+        "iscrowd": 0
+    }
+    
+    return annotation
+
+def coco_postprocess(rgb_folder, mask_folder, output_json):
+    images = []
+    annotations = []
+    categories = [{"id": 1, "name": "object"}]
+    annotation_id = 1
+    
+    for idx, file_name in enumerate(os.listdir(rgb_folder)):
+        if file_name.endswith('.png') or file_name.endswith('.jpg'):
+            # Add image entry
+            image_path = os.path.join(rgb_folder, file_name)
+            mask_path = os.path.join(mask_folder, file_name)
+            image = cv2.imread(image_path)
+            height, width, _ = image.shape
+
+            image_info = {
+                "id": idx + 1,
+                "file_name": file_name,
+                "height": height,
+                "width": width
+            }
+            images.append(image_info)
+            
+            # Load mask and generate annotations
+            mask_img = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+            unique_values = np.unique(mask_img)
+
+            for val in unique_values:
+                if val == 0:
+                    continue  # Skip background
+                
+                binary_mask = np.where(mask_img == val, 1, 0).astype(np.uint8)
+                annotation = create_coco_annotation(idx + 1, 1, binary_mask, annotation_id)
+                annotations.append(annotation)
+                annotation_id += 1
+    
+    coco_output = {
+        "images": images,
+        "annotations": annotations,
+        "categories": categories
+    }
+
+    with open(output_json, 'w') as f:
+        json.dump(coco_output, f, indent=4)
 
 
 if __name__ == "__main__":
@@ -190,15 +262,22 @@ if __name__ == "__main__":
     # mask_postprocess(source_path=source_path)
 
     cur_system = "/home/tobia"
-    cur_dataset = "3xM_Dataset_1_10_TEST"
+    cur_dataset = "3xM_Dataset_1_1_TEST"
     source_path = f"~/Downloads/{cur_dataset}"   # /{cur_dataset}
     output_path = f"~/data/3xM/{cur_dataset}"
+
+    rgb_source_path = f"{cur_system}/Downloads/{cur_dataset}/rgb"
+    mask_source_path = f"{cur_system}/Downloads/{cur_dataset}/mask"
+    mask_prep_path = f"{cur_system}/Downloads/{cur_dataset}/mask-prep"
+    coco_json_path = f"{cur_system}/Downloads/{cur_dataset}/coco_annotations.json" 
+
+
     # to_dual_dir_and_mask_postprocess(source_path=source_path, output_path=output_path)
 
-    mask_source_path = f"{cur_system}/Downloads/{cur_dataset}/mask"
-    mask_output_path = f"{cur_system}/Downloads/{cur_dataset}/mask-prep"
-    mask_postprocess(mask_source_path=mask_source_path, mask_output_path=mask_output_path)
+    # creating the grey mask from the rgb mask
+    # mask_postprocess(mask_source_path=mask_source_path, mask_output_path=mask_prep_path)
 
     # coco_postprocess
+    coco_postprocess(rgb_folder=rgb_source_path, mask_folder=mask_prep_path, output_json=coco_json_path)
 
 
