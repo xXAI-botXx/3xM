@@ -21,7 +21,7 @@ Feel free to use my Unreal Engine 5 project, to create your own dataset for inst
 
 
 ### Unreal Engine 5 Datagenerator
-You can download my UE5 project [here](https://1drv.ms/f/s!AqSTBkFULemxkrkvU3_O7QYndLNeFw?e=h2FfDM). Or you can find all important files without the shapes/meshes and textures/materials in the [unreal_engine_544_project folder](./unreal_engine_544_project/).
+You can download my UE5 project [here](https://1drv.ms/f/s!AqSTBkFULemxlLV4UkCS-zJ34i8uEw?e=iXJ999). Or you can find all important files without the shapes/meshes and textures/materials in the [unreal_engine_544_project folder](./unreal_engine_544_project/).
 
 You have to download and install UE5. Following I will give you a small guide for the installation.
 - Windows:
@@ -30,9 +30,17 @@ You have to download and install UE5. Following I will give you a small guide fo
     - Then you can choose the Unreal Engine version **5.4.4**
 
 
-To start the traingeneration, you have to start the UE5 Editor, then open the project (you can just move the downloaded UE5 project to the official project folder from your UE5 Editor).<br>After this step you click on "Content Drawer" and then click on the "data_gen" Level. This will open the Level for datageneration.<br>On the left will be the variables and some of them should be set by yourself. I list them following (the first 12 Variables):
-- **ModelAmounts**<br>An array with integer values how many 3D-Models should be used for every dataset
-- **MaterialAmounts** <br>An array with integer values how many Materials should be used for every dataset
+To start the traingeneration, you have to start the UE5 Editor, then open the project (you can just move the downloaded UE5 project to the official project folder from your UE5 Editor).<br>After this step you click on "Content Drawer" and then click on the "data_gen" Level. This will open the Level for datageneration.<br>On the left will be the variables and some of them should be set by yourself. I list them following (the first 20 Variables):
+- **MeshTable** <br>The table with the meshes to use. It should use the mesh_data_table_struct.
+- **MaterialTable** <br>The table with the materials to use. It should use the material_data_table_struct.
+- **BackgroundTable** <br>The table with the materials to use for the bin and the ground. It should use the simple_material_data_table_struct.
+- **RandomIndexing** <br>Decides whether to choose random meshes and materials or to use a static range from the Amount and the min Amount
+- **DuplicateMeshes** <br>Decides whether to allow duplicate meshes or not.
+- **DuplicateMaterials** <br>Decides whether to allow duplicate materials or not.
+- **ModelAmounts**<br>An array with integer values how many 3D-Models should be used for every dataset / elements functions as the max index when using RandomIndexing==False.
+- **MaterialAmounts** <br>An array with integer values how many Materials should be used for every dataset / elements functions as the max index when using RandomIndexing==False.
+- **ModelMinAmounts**<br>Integer Array with the same size as ModelAmounts. When RandomIndexing==True then the elements functions as min index.
+- **MaterialMinAmounts** <br>Integer Array with the same size as ModelAmounts. When RandomIndexing==True then the elements functions as min index.
 - **ObjectAmountMIN** <br>Minimum amount of objects/items per scene.
 - **ObjectAmountMAX** <br>Minimum amount of objects/items per scene.
 - **DataAmountPerDataset** <br>Defines the numbers of images/scenes created for one dataset.
@@ -43,6 +51,8 @@ To start the traingeneration, you have to start the UE5 Editor, then open the pr
 - **TimeLimit** <br>Time (in seconds) until the scene will be frozen and rendered, whether some items are still moving or not.
 - **MinSize** <br>The minimum size of items.
 - **MaxSize** <br>The maximum size of items.
+
+After adjusting these parameters to your need you have to click the save button and the compile button on the top left. Then you can close the window and go back to the level editor window. There you can hit the green play button. 
 
 
 Update: The project is **only available in Windows** because of a used Plugin, called [Victory BP by Rama](https://forums.unrealengine.com/t/ramas-extra-blueprint-nodes-for-ue5-no-c-required/231476).
