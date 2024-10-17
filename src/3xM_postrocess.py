@@ -179,12 +179,46 @@ def mask_postprocess(mask_source_path, mask_output_path):
         for cur_mask_name in all_masks
     )
 
+    print("Successfull finsihed Mask preparation!")
+
 def move_mask(mask_name, source, output):
     mask_rgb_img = cv2.imread(os.path.join(source, mask_name))
     if mask_rgb_img is not None:
         grey_mask = rgb_mask_to_grey_mask(mask_rgb_img)
         cv2.imwrite(os.path.join(output, mask_name), grey_mask)
 
+def depth_postprocess(depth_source_path, depth_output_path):
+    if os.path.exists(depth_output_path):
+        shutil.rmtree(depth_output_path)
+    
+    os.makedirs(depth_output_path, exist_ok=True)
+
+    all_depth = []
+    for cur_depth in os.listdir(depth_source_path):
+        if any([cur_depth.endswith(i) for i in [".png", ".jpg"]]):
+            all_depth += [cur_depth]
+
+    # run all tasks as fast as possible
+    Parallel(n_jobs=-1)(
+        delayed(depth_postprocess)(cur_depth_name, depth_source_path, depth_output_path)
+        for cur_depth_name in all_depth
+    )
+
+    print("Successfull finsihed Depth preparation!")
+
+def rgb_depth_to_grey_depth(cur_depth_name, depth_source_path, depth_output_path):
+    # Construct full file paths
+    depth_file_path = os.path.join(depth_source_path, cur_depth_name)
+    output_file_path = os.path.join(depth_output_path, cur_depth_name)
+
+    # Read the depth image
+    img = cv2.imread(depth_file_path)
+
+    # Convert the RGB image to grayscale (assuming depth is encoded in the RGB channels)
+    grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Save the processed grayscale image to the output folder
+    cv2.imwrite(output_file_path, grey_img)
 
 def create_coco_annotation(image_id, category_id, binary_mask, annotation_id):
     # Get the contours for the mask
@@ -266,18 +300,23 @@ if __name__ == "__main__":
     source_path = f"~/Downloads/{cur_dataset}"   # /{cur_dataset}
     output_path = f"~/data/3xM/{cur_dataset}"
 
-    rgb_source_path = f"{cur_system}/Downloads/{cur_dataset}/rgb"
-    mask_source_path = f"{cur_system}/Downloads/{cur_dataset}/mask"
-    mask_prep_path = f"{cur_system}/Downloads/{cur_dataset}/mask-prep"
-    coco_json_path = f"{cur_system}/Downloads/{cur_dataset}/coco_annotations.json" 
+    rgb_source_path = f"{cur_system}/data/3xM/{cur_dataset}/rgb"
+    mask_source_path = f"{cur_system}/data/3xM/{cur_dataset}/mask"
+    mask_prep_path = f"{cur_system}/data/3xM/{cur_dataset}/mask-prep"
+    depth_source_path = f"{cur_system}/data/3xM/{cur_dataset}/depth"
+    depth_prep_path = f"{cur_system}/data/3xM/{cur_dataset}/depth-prep"
+    coco_json_path = f"{cur_system}/data/3xM/{cur_dataset}/coco_annotations.json" 
 
 
     # to_dual_dir_and_mask_postprocess(source_path=source_path, output_path=output_path)
 
     # creating the grey mask from the rgb mask
-    # mask_postprocess(mask_source_path=mask_source_path, mask_output_path=mask_prep_path)
+    mask_postprocess(mask_source_path=mask_source_path, mask_output_path=mask_prep_path)
+
+    # creating grey depth images from RGB depth
+    depth_postprocess(depth_source_path, depth_prep_path)
 
     # coco_postprocess
-    coco_postprocess(rgb_folder=rgb_source_path, mask_folder=mask_prep_path, output_json=coco_json_path)
+    # coco_postprocess(rgb_folder=rgb_source_path, mask_folder=mask_prep_path, output_json=coco_json_path)
 
 
