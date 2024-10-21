@@ -37,6 +37,7 @@ To start the traingeneration, you have to start the UE5 Editor, then open the pr
 - **RandomIndexing** <br>Decides whether to choose random meshes and materials or to use a static range from the Amount and the min Amount
 - **DuplicateMeshes** <br>Decides whether to allow duplicate meshes or not.
 - **DuplicateMaterials** <br>Decides whether to allow duplicate materials or not.
+- **StartImageCounter** <br>Sets on which Image the image counter should start at the beginning (default is 0). -> only the first time
 - **StartModelAmountIndex** <br>Sets on which Index to start the Model Amount
 - **StartMaterialAmountIndex** <br>Sets on which Index to start the Material Amount
 - **ModelAmounts**<br>An array with integer values how many 3D-Models should be used for every dataset / elements functions as the max index when using RandomIndexing==False.
