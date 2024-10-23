@@ -1,12 +1,46 @@
+"""
+Your Toolkit for 3xM Dataset
+
+You can install the needed libs by installing the '3xm' conda env:
+conda env create -f env.yml
+
+- Downloading Datasets
+- Extracting Datasets
+- Postprocessing Datasets
+    - Resizing
+    - Extract Depth Image
+    - RGB Mask to Grey Mask
+    
+By Tobia Ippolito <3
+"""
+
+# just some pre definitions, so they can be used. Go to the user variables to set your settings
+from enum import Enum
+
+class DATASET(Enum):
+    TRIPPLE_M_10_10 = "https://drive.google.com/drive/folders/1Mjb_jZNVumyeDrmD8S3hCO1sG0UFpBCs?usp=sharing"
+    TRIPPLE_M_10_80 = "https://drive.google.com/drive/folders/1swAx8cONBohY0ojsE4DZlmY-YK0ieRRI?usp=sharing"
+    
+class DOWNLOAD_SOURCE(Enum):
+    KAGGLE = lambda path, url: download_from_kaggle(path, url)
+    ONEDRIVE = lambda path, url: download_from_onedrive(path, url)
+    GOOGLEDRIVE = lambda path, url: download_from_googledrive(path, url)
 
 ##################
 # User Variables #
 ##################
-SHOULD_UNZIP = False
-ZIP_PATH = "/home/local-admin/Downloads/"
+SHOULD_DOWNLOAD = False
+TARGET_PATH = ""
+DATSET_FOR_DOWNLOAD = DATASET.TRIPPLE_M_10_10
+SOURCE_FOR_DOWNLOAD = DOWNLOAD_SOURCE.GOOGLEDRIVE
 
+SHOULD_UNZIP = True
+DOWNLOAD_UNZIP_PATH = "/home/local-admin/Downloads/"
+
+# Goal for unzipping and source for postproces
 SOURCE_PATH = "/home/local-admin/data/3xM/3xM_Dataset_10_10"
 
+SHOULD_POST_PROCESS = True
 WIDTH = 800
 HEIGHT =  450
 
@@ -25,6 +59,12 @@ from joblib import Parallel, delayed
 import numpy as np
 import cv2
 
+import zipfile
+import py7zr
+
+import subprocess
+import requests
+import gdown
 
 
 #############
@@ -57,6 +97,137 @@ def print_progress(current, total):
     white_spaces = progress_bar_size - progress_bar
     print(f"[{'#' * progress_bar}{' ' * white_spaces}] {current}/{total} images processed.")
 
+# Functions for Downloading
+def download_from_kaggle(target_path: str, download_url: str):
+    """Downloads the dataset from Kaggle using the Kaggle API."""
+    try:
+        # Make sure Kaggle is installed: conda install -c conda-forge kaggle
+        subprocess.run(
+            ['kaggle', 'datasets', 'download', '-d', download_url, '-p', target_path],
+            shell=True, 
+            check=True
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"Error downloading dataset: {e}")
+        raise
+    
+def download_from_onedrive(target_path:str, download_url:str):
+    response = requests.get(download_url)
+    with open(target_path, "wb") as f:
+        f.write(response.content)
+        
+def download_from_googledrive(target_path:str, download_url:str):
+    gdown.download_folder(download_url, output=target_path, quiet=False)
+    
+def download_dataset(
+                target_path:str, 
+                dataset:DATASET, 
+                source:DOWNLOAD_SOURCE
+            ):
+    
+    # create and update target path
+    shapes, textures = dataset.name.split("_")[-2:]
+    dataset_name = f"3xM_Dataset_{shapes}_{textures}"
+    target_path = os.path.join(target_path, dataset_name)
+    
+    if os.path.exists(target_path):
+        shutil.rmtree(target_path)
+    os.makedirs(target_path, exist_ok=True)
+    
+    # download the files from kaggle, onedrive or googledrive
+    if source == DOWNLOAD_SOURCE.KAGGLE:
+        download_from_kaggle(target_path=target_path, download_url=dataset.value)
+    elif source == DOWNLOAD_SOURCE.ONEDRIVE:
+        target_path = os.path.join(target_path, f"{dataset_name}.zip")
+        download_from_onedrive(target_path=target_path, download_url=dataset.value)
+    elif source == DOWNLOAD_SOURCE.GOOGLEDRIVE:
+        download_from_googledrive(target_path=target_path, download_url=dataset.value)
+
+# Functions for Zip Extraction
+def move_all_files(source_dir, destination_dir):
+    if os.path.exists(source_dir):
+        for filename in os.listdir(source_dir):
+            source_file = os.path.join(source_dir, filename)
+            
+            if os.path.isfile(source_file):
+                destination_file = os.path.join(destination_dir, filename)
+                shutil.move(source_file, destination_file)
+
+def extract_zip_folders(source_dir, destination_dir):
+    print("Start dataset extraction...")
+    
+    # Check if source and destination directories exist
+    if not os.path.exists(source_dir):
+        raise FileNotFoundError(f"Source directory '{source_dir}' does not exist.")
+        return
+    if not os.path.exists(destination_dir):
+        os.makedirs(destination_dir)
+    else:
+        shutil.rmtree(destination_dir)
+        
+    rgb_path = os.path.join(destination_dir, "rgb")
+    os.makedirs(rgb_path)
+    depth_path = os.path.join(destination_dir, "depth")
+    os.makedirs(depth_path)
+    mask_path = os.path.join(destination_dir, "mask")
+    os.makedirs(mask_path)
+
+
+    # start extracting
+    error_files = []
+    successfull = 0
+    
+    # Iterate over all files in the source directory
+    for file_name in os.listdir(source_dir):
+        # Check if the file is a zip file
+        if file_name.endswith(".zip") or file_name.endswith(".7z"):
+            file_path = os.path.join(source_dir, file_name)
+            
+            # Create a folder with the same name as the zip file (without .zip) in the destination directory
+            extract_folder = os.path.join(source_dir, ".".join(file_name.split(".")[:-1]))
+            if not os.path.exists(extract_folder):
+                os.makedirs(extract_folder)
+            else:
+                shutil.rmtree(extract_folder)
+            
+            try:
+                if file_name.endswith(".zip"):
+                    # Unzip the file
+                    with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                        zip_ref.extractall(extract_folder)
+                elif file_name.endswith(".7z"):
+                    with py7zr.SevenZipFile(file_path, mode='r') as zip_ref:
+                        zip_ref.extractall(path=extract_folder)
+                        
+                # move files to target
+                inner_folder_name  = os.listdir(extract_folder)[0]
+                source_rgb_path = os.path.join(extract_folder, inner_folder_name, "rgb")
+                source_depth_path = os.path.join(extract_folder, inner_folder_name, "depth")
+                source_mask_path = os.path.join(extract_folder, inner_folder_name, "mask")
+                move_all_files(source_rgb_path, rgb_path)
+                move_all_files(source_depth_path, depth_path)
+                move_all_files(source_mask_path, mask_path)
+
+                successfull += 1
+            except Exception as e:
+                error_files += [file_path]
+                print(f"Error during extracting {file_name} to {extract_folder}")
+                continue
+            
+            print(f"Extracted: {file_name} to {destination_dir}")
+        else:
+            error_files += [file_path]
+            print(f"Error during extracting {file_name} = (is not a supported zip-format)")
+
+    shutil.rmtree(source_dir)
+
+    print(f"\n\nErrors: {len(error_files)}")
+    for cur_err_file in error_files:
+        print(f"    -> {cur_err_file}")
+
+    print(f"\nSuccesfull: {successfull}")
+
+# functions for postprocessing
 def resize(img, width, height, is_mask=False):
     """
     Resize the image to the given width and height.
@@ -185,7 +356,8 @@ def postprocess(source_path, width, height, delete_original=False):
         print("")
         print_progress(idx, total_images)
         print(f"\n\n      -> Needed: {calc_duration(start_time)}")
-        rgb_depth_mask_postprocess(cur_name, source_path, width, height)
+        if cur_name is not None:
+            rgb_depth_mask_postprocess(cur_name, source_path, width, height)
         
     # run all tasks as fast as possible
     Parallel(n_jobs=-1)(
@@ -198,6 +370,7 @@ def postprocess(source_path, width, height, delete_original=False):
         shutil.rmtree(os.path.join(source_path, "depth"))
         shutil.rmtree(os.path.join(source_path, "mask"))
 
+    process_with_progress(None, total_images)
     print(f"\n\nSuccessfull finsihed 3xM postprocessing! ({get_time_str()})")
 
 
@@ -207,12 +380,24 @@ def postprocess(source_path, width, height, delete_original=False):
 ################
 if __name__ == "__main__":
     
+    if SHOULD_DOWNLOAD or SHOULD_UNZIP:
+        DOWNLOAD_UNZIP_PATH = os.path.join(DOWNLOAD_UNZIP_PATH, "3xM_Cache")
+    
+        if os.path.exists(DOWNLOAD_UNZIP_PATH):
+            shutil.rmtree(DOWNLOAD_UNZIP_PATH)
+        os.makedirs(DOWNLOAD_UNZIP_PATH, exist_ok=True)
+    
+    # Download Dataset
+    if SHOULD_DOWNLOAD:
+        download_dataset(target_path=DOWNLOAD_UNZIP_PATH, dataset=DATSET_FOR_DOWNLOAD, source=SOURCE_FOR_DOWNLOAD)
+    
     # Unzip the download files
     if SHOULD_UNZIP:
-        pass
+        extract_zip_folders(source_dir=DOWNLOAD_UNZIP_PATH, destination_dir=SOURCE_PATH)
 
     # Postprocessing
-    postprocess(source_path=SOURCE_PATH, width=WIDTH, height=HEIGHT)
+    if SHOULD_POST_PROCESS:
+        postprocess(source_path=SOURCE_PATH, width=WIDTH, height=HEIGHT)
 
 
 
