@@ -1,4 +1,6 @@
 """
+FIXME: Merge this file with postprocess.py
+
  Use this file to download 3xM Dataset and preprocess the data. 
  
  Just go down to the **if __name__ == "__main__":** part 
