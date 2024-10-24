@@ -34,15 +34,17 @@ TARGET_PATH = ""
 DATSET_FOR_DOWNLOAD = DATASET.TRIPPLE_M_10_10
 SOURCE_FOR_DOWNLOAD = DOWNLOAD_SOURCE.GOOGLEDRIVE
 
-SHOULD_UNZIP = True
+SHOULD_UNZIP = False
 DOWNLOAD_UNZIP_PATH = "/home/local-admin/Downloads/"
 
 # Goal for unzipping and source for postproces
 SOURCE_PATH = "/home/local-admin/data/3xM/3xM_Dataset_10_10"
 
 SHOULD_POST_PROCESS = True
-WIDTH = 800
-HEIGHT =  450
+ONLY_MASK_CONVERTION = True
+DELETE_ORIGINAL = True
+WIDTH = 1920
+HEIGHT =  1080
 
 
 
@@ -266,14 +268,15 @@ def depth_postprocess(depth_name, source, output, width, height):
         grey_img = resize(grey_img, width, height, is_mask=False)
         cv2.imwrite(output_path, grey_img)
     
-def mask_postprocess(mask_name, source, output, width, height):
+def mask_postprocess(mask_name, source, output, width, height, should_resize=False):
     source_path = os.path.join(source, mask_name)
     output_path = os.path.join(output, mask_name)
     
     mask_rgb_img = cv2.imread(source_path, cv2.IMREAD_UNCHANGED)
     if mask_rgb_img is not None:
         grey_mask = rgb_mask_to_grey_mask(mask_rgb_img)
-        grey_mask = resize(grey_mask, width, height, is_mask=True)
+        if should_resize:
+            grey_mask = resize(grey_mask, width, height, is_mask=True)
         cv2.imwrite(output_path, grey_mask)
         
 def rgb_mask_to_grey_mask(rgb_img, verify=False):
@@ -308,14 +311,15 @@ def rgb_mask_to_grey_mask(rgb_img, verify=False):
 
     return grey_mask
 
-def rgb_depth_mask_postprocess(name, source, width, height):
+def rgb_depth_mask_postprocess(name, source, width, height, only_mask_convertion):
     
-    rgb_postprocess(name, os.path.join(source, "rgb"), os.path.join(source, "rgb-prep"), width, height)
-    depth_postprocess(name, os.path.join(source, "depth"), os.path.join(source, "depth-prep"), width, height)
-    mask_postprocess(name, os.path.join(source, "mask"), os.path.join(source, "mask-prep"), width, height)
+    if only_mask_convertion == False:
+        rgb_postprocess(name, os.path.join(source, "rgb"), os.path.join(source, "rgb-prep"), width, height)
+        depth_postprocess(name, os.path.join(source, "depth"), os.path.join(source, "depth-prep"), width, height)
+    mask_postprocess(name, os.path.join(source, "mask"), os.path.join(source, "mask-prep"), width, height, should_resize=(not only_mask_convertion))
 
 
-def postprocess(source_path, width, height, delete_original=False):
+def postprocess(source_path, width, height, only_mask_convertion=True, delete_original=False):
     """
     Postprocess rgb, depth and masks.
     
@@ -331,13 +335,14 @@ def postprocess(source_path, width, height, delete_original=False):
     start_time = time.time()
     
     # Create all folders and make sure that they are empty
-    if os.path.exists(os.path.join(source_path, "rgb-prep")):
-        shutil.rmtree(os.path.join(source_path, "rgb-prep"))
-    os.makedirs(os.path.join(source_path, "rgb-prep"), exist_ok=True)
-    
-    if os.path.exists(os.path.join(source_path, "depth-prep")):
-        shutil.rmtree(os.path.join(source_path, "depth-prep"))
-    os.makedirs(os.path.join(source_path, "depth-prep"), exist_ok=True)
+    if only_mask_convertion == False:
+        if os.path.exists(os.path.join(source_path, "rgb-prep")):
+            shutil.rmtree(os.path.join(source_path, "rgb-prep"))
+        os.makedirs(os.path.join(source_path, "rgb-prep"), exist_ok=True)
+        
+        if os.path.exists(os.path.join(source_path, "depth-prep")):
+            shutil.rmtree(os.path.join(source_path, "depth-prep"))
+        os.makedirs(os.path.join(source_path, "depth-prep"), exist_ok=True)
     
     if os.path.exists(os.path.join(source_path, "mask-prep")):
         shutil.rmtree(os.path.join(source_path, "mask-prep"))
@@ -345,7 +350,7 @@ def postprocess(source_path, width, height, delete_original=False):
 
     # find all images
     all_images = []
-    for cur_image in os.listdir(os.path.join(source_path, "rgb")):
+    for cur_image in os.listdir(os.path.join(source_path, "mask")):
         if any([cur_image.endswith(i) for i in [".png", ".jpg"]]):
             all_images += [cur_image]
     total_images = len(all_images)
@@ -357,7 +362,7 @@ def postprocess(source_path, width, height, delete_original=False):
         print_progress(idx, total_images)
         print(f"\n\n      -> Needed: {calc_duration(start_time)}")
         if cur_name is not None:
-            rgb_depth_mask_postprocess(cur_name, source_path, width, height)
+            rgb_depth_mask_postprocess(cur_name, source_path, width, height, only_mask_convertion)
         
     # run all tasks as fast as possible
     Parallel(n_jobs=-1)(
@@ -366,8 +371,9 @@ def postprocess(source_path, width, height, delete_original=False):
     )
     
     if delete_original:
-        shutil.rmtree(os.path.join(source_path, "rgb"))
-        shutil.rmtree(os.path.join(source_path, "depth"))
+        if only_mask_convertion == False:
+            shutil.rmtree(os.path.join(source_path, "rgb"))
+            shutil.rmtree(os.path.join(source_path, "depth"))
         shutil.rmtree(os.path.join(source_path, "mask"))
 
     process_with_progress(None, total_images)
@@ -397,7 +403,8 @@ if __name__ == "__main__":
 
     # Postprocessing
     if SHOULD_POST_PROCESS:
-        postprocess(source_path=SOURCE_PATH, width=WIDTH, height=HEIGHT)
+        postprocess(source_path=SOURCE_PATH, width=WIDTH, height=HEIGHT, 
+                    only_mask_convertion=ONLY_MASK_CONVERTION, delete_original=DELETE_ORIGINAL)
 
 
 
