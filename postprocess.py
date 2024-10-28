@@ -31,17 +31,17 @@ class DATASET(Enum):
 ##################
 # User Variables #
 ##################
-CURRENT_DATASET = DATASET.TRIPPLE_M_10_10
+CURRENT_DATASET = DATASET.TRIPPLE_M_10_80
 
 SHOULD_DOWNLOAD = False
 SHOULD_UNZIP = True
-SHOULD_POST_PROCESS = False
+SHOULD_POST_PROCESS = True
 
 # For Download and Unzip
 DOWNLOAD_UNZIP_PATH = "D:/Downloads"    # "/home/local-admin/Downloads/"
 
 # Destination for unzipping and source for postprocess
-SOURCE_PATH = "D:/3xM/3xM_Dataset_10_80" # "/home/local-admin/data/3xM/3xM_Dataset_10_10"
+SOURCE_PATH = "D:/3xM" # "/home/local-admin/data/3xM"
 
 # for postprocessing only
 ONLY_MASK_CONVERTION = True
@@ -177,9 +177,11 @@ def extract_zip_folders(source_dir, destination_dir, dataset):
     
     # Iterate over all files in the source directory
     for file_name in os.listdir(source_dir):
+
+        file_path = os.path.join(source_dir, file_name)
+
         # Check if the file is a zip file
         if file_name.endswith(".zip") or file_name.endswith(".7z"):
-            file_path = os.path.join(source_dir, file_name)
             
             # Create a folder with the same name as the zip file (without .zip) in the destination directory
             extract_folder = os.path.join(source_dir, ".".join(file_name.split(".")[:-1]))
@@ -384,7 +386,7 @@ def postprocess(source_path, dataset, width, height, only_mask_convertion=True, 
 ################
 if __name__ == "__main__":
     
-    if SHOULD_DOWNLOAD or SHOULD_UNZIP:
+    if SHOULD_DOWNLOAD:
         DOWNLOAD_UNZIP_PATH = os.path.join(DOWNLOAD_UNZIP_PATH, "3xM_Cache")
     
         if os.path.exists(DOWNLOAD_UNZIP_PATH):
