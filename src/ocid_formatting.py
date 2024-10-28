@@ -49,7 +49,12 @@ for cur_root, cur_dirs, cur_files in os.walk(source_path):
             if os.path.exists(image) and os.path.exists(mask):
                 if has_an_object(mask_img_path=mask):
                     shutil.copy(image, os.path.join(color_path, f"image_{cur_idx:08}.png"))
-                    shutil.copy(image, os.path.join(depth_path, f"image_{cur_idx:08}.png"))
+
+                    # shutil.copy(image, os.path.join(depth_path, f"image_{cur_idx:08}.png"))
+                    depth_img = cv2.imread(depth, cv2.IMREAD_UNCHANGED)
+                    depth_img = depth_img.astype(np.uint8)
+                    cv2.imwrite(os.path.join(depth_path, f"image_{cur_idx:08}.png"), depth_img)
+
                     # shutil.copy(mask, os.path.join(mask_path, f"image_{cur_idx:08}.png"))
                     mask_img = cv2.imread(mask, cv2.IMREAD_UNCHANGED)
                     mask_img = mask_img.astype(np.uint8)
