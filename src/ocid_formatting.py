@@ -30,10 +30,12 @@ if os.path.exists(output_path):
 os.makedirs(output_path, exist_ok=True)
 
 mask_path = os.path.join(output_path, "masks")
-color_path = os.path.join(output_path, "color_images")
+color_path = os.path.join(output_path, "rgb")
+depth_path = os.path.join(output_path, "depth")
 
 os.makedirs(mask_path, exist_ok=True)
 os.makedirs(color_path, exist_ok=True)
+os.makedirs(depth_path, exist_ok=True)
 
 
 cur_idx = 0
@@ -41,11 +43,13 @@ for cur_root, cur_dirs, cur_files in os.walk(source_path):
     if "rgb" in cur_dirs and "label" in cur_dirs:
         for cur_image_name in os.listdir(os.path.join(cur_root, "rgb")):
             image = os.path.join(cur_root, "rgb", cur_image_name)
+            depth = os.path.join(cur_root, "depth", cur_image_name)
             mask = os.path.join(cur_root, "label", cur_image_name)
 
             if os.path.exists(image) and os.path.exists(mask):
                 if has_an_object(mask_img_path=mask):
                     shutil.copy(image, os.path.join(color_path, f"image_{cur_idx:08}.png"))
+                    shutil.copy(image, os.path.join(depth_path, f"image_{cur_idx:08}.png"))
                     # shutil.copy(mask, os.path.join(mask_path, f"image_{cur_idx:08}.png"))
                     mask_img = cv2.imread(mask, cv2.IMREAD_UNCHANGED)
                     mask_img = mask_img.astype(np.uint8)
