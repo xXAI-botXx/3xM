@@ -52,8 +52,10 @@ for cur_root, cur_dirs, cur_files in os.walk(source_path):
 
                     # shutil.copy(image, os.path.join(depth_path, f"image_{cur_idx:08}.png"))
                     depth_img = cv2.imread(depth, cv2.IMREAD_UNCHANGED)
-                    depth_img = depth_img.astype(np.uint8)
-                    cv2.imwrite(os.path.join(depth_path, f"image_{cur_idx:08}.png"), depth_img)
+                    # Normalize the values to the range 0–255
+                    depth_img_normalized = cv2.normalize(depth_img, None, 0, 255, cv2.NORM_MINMAX)
+                    depth_img_uint8 = depth_img_normalized.astype(np.uint8)
+                    cv2.imwrite(os.path.join(depth_path, f"image_{cur_idx:08}.png"), depth_img_uint8)
 
                     # shutil.copy(mask, os.path.join(mask_path, f"image_{cur_idx:08}.png"))
                     mask_img = cv2.imread(mask, cv2.IMREAD_UNCHANGED)
