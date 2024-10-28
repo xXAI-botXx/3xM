@@ -18,29 +18,32 @@ By Tobia Ippolito <3
 from enum import Enum
 
 class DATASET(Enum):
-    TRIPPLE_M_10_10 = "https://drive.google.com/drive/folders/1Mjb_jZNVumyeDrmD8S3hCO1sG0UFpBCs?usp=sharing"
-    TRIPPLE_M_10_80 = "https://drive.google.com/drive/folders/1swAx8cONBohY0ojsE4DZlmY-YK0ieRRI?usp=sharing"
-    
-class DOWNLOAD_SOURCE(Enum):
-    KAGGLE = lambda path, url: download_from_kaggle(path, url)
-    ONEDRIVE = lambda path, url: download_from_onedrive(path, url)
-    GOOGLEDRIVE = lambda path, url: download_from_googledrive(path, url)
+    TRIPPLE_M_10_10   = {"name":"3xM_Dataset_10_10",   "url": ""}
+    TRIPPLE_M_10_80   = {"name":"3xM_Dataset_10_80",   "url": ""}
+    TRIPPLE_M_10_160  = {"name":"3xM_Dataset_10_160",  "url": ""}
+    TRIPPLE_M_80_10   = {"name":"3xM_Dataset_80_10",   "url": ""}
+    TRIPPLE_M_80_80   = {"name":"3xM_Dataset_80_80",   "url": ""}
+    TRIPPLE_M_80_160  = {"name":"3xM_Dataset_80_160",  "url": ""}
+    TRIPPLE_M_160_10  = {"name":"3xM_Dataset_160_10",  "url": ""}
+    TRIPPLE_M_160_80  = {"name":"3xM_Dataset_160_80",  "url": ""}
+    TRIPPLE_M_160_160 = {"name":"3xM_Dataset_160_160", "url": ""}
 
 ##################
 # User Variables #
 ##################
+CURRENT_DATASET = DATASET.TRIPPLE_M_10_10
+
 SHOULD_DOWNLOAD = False
-TARGET_PATH = ""
-DATSET_FOR_DOWNLOAD = DATASET.TRIPPLE_M_10_10
-SOURCE_FOR_DOWNLOAD = DOWNLOAD_SOURCE.GOOGLEDRIVE
+SHOULD_UNZIP = True
+SHOULD_POST_PROCESS = False
 
-SHOULD_UNZIP = False
-DOWNLOAD_UNZIP_PATH = "/home/local-admin/Downloads/"
+# For Download and Unzip
+DOWNLOAD_UNZIP_PATH = "D:/Downloads"    # "/home/local-admin/Downloads/"
 
-# Goal for unzipping and source for postproces
-SOURCE_PATH = "/home/local-admin/data/3xM/3xM_Dataset_10_10"
+# Destination for unzipping and source for postprocess
+SOURCE_PATH = "D:/3xM/3xM_Dataset_10_80" # "/home/local-admin/data/3xM/3xM_Dataset_10_10"
 
-SHOULD_POST_PROCESS = True
+# for postprocessing only
 ONLY_MASK_CONVERTION = True
 DELETE_ORIGINAL = True
 WIDTH = 1920
@@ -65,8 +68,7 @@ import zipfile
 import py7zr
 
 import subprocess
-import requests
-import gdown
+
 
 
 #############
@@ -113,23 +115,15 @@ def download_from_kaggle(target_path: str, download_url: str):
         print(f"Error downloading dataset: {e}")
         raise
     
-def download_from_onedrive(target_path:str, download_url:str):
-    response = requests.get(download_url)
-    with open(target_path, "wb") as f:
-        f.write(response.content)
-        
-def download_from_googledrive(target_path:str, download_url:str):
-    gdown.download_folder(download_url, output=target_path, quiet=False)
-    
 def download_dataset(
                 target_path:str, 
-                dataset:DATASET, 
-                source:DOWNLOAD_SOURCE
+                dataset:DATASET
             ):
     
     # create and update target path
-    shapes, textures = dataset.name.split("_")[-2:]
-    dataset_name = f"3xM_Dataset_{shapes}_{textures}"
+    # shapes, textures = dataset.name.split("_")[-2:]
+    # dataset_name = f"3xM_Dataset_{shapes}_{textures}"
+    dataset_name = dataset.value["name"]
     target_path = os.path.join(target_path, dataset_name)
     
     if os.path.exists(target_path):
@@ -155,8 +149,10 @@ def move_all_files(source_dir, destination_dir):
                 destination_file = os.path.join(destination_dir, filename)
                 shutil.move(source_file, destination_file)
 
-def extract_zip_folders(source_dir, destination_dir):
+def extract_zip_folders(source_dir, destination_dir, dataset):
     print("Start dataset extraction...")
+
+    destination_dir = os.path.join(destination_dir, dataset.value["name"])
     
     # Check if source and destination directories exist
     if not os.path.exists(source_dir):
@@ -319,7 +315,7 @@ def rgb_depth_mask_postprocess(name, source, width, height, only_mask_convertion
     mask_postprocess(name, os.path.join(source, "mask"), os.path.join(source, "mask-prep"), width, height, should_resize=(not only_mask_convertion))
 
 
-def postprocess(source_path, width, height, only_mask_convertion=True, delete_original=False):
+def postprocess(source_path, dataset, width, height, only_mask_convertion=True, delete_original=False):
     """
     Postprocess rgb, depth and masks.
     
@@ -331,6 +327,8 @@ def postprocess(source_path, width, height, only_mask_convertion=True, delete_or
     """
     start_str = f"Start 3xM postprocessing! ({get_time_str()})"
     print(start_str)
+
+    source_path = os.path.join(source_path, dataset.value["name"])
     
     start_time = time.time()
     
@@ -395,15 +393,15 @@ if __name__ == "__main__":
     
     # Download Dataset
     if SHOULD_DOWNLOAD:
-        download_dataset(target_path=DOWNLOAD_UNZIP_PATH, dataset=DATSET_FOR_DOWNLOAD, source=SOURCE_FOR_DOWNLOAD)
+        download_dataset(target_path=DOWNLOAD_UNZIP_PATH, dataset=CURRENT_DATASET)
     
     # Unzip the download files
     if SHOULD_UNZIP:
-        extract_zip_folders(source_dir=DOWNLOAD_UNZIP_PATH, destination_dir=SOURCE_PATH)
+        extract_zip_folders(source_dir=DOWNLOAD_UNZIP_PATH, destination_dir=SOURCE_PATH, dataset=CURRENT_DATASET)
 
     # Postprocessing
     if SHOULD_POST_PROCESS:
-        postprocess(source_path=SOURCE_PATH, width=WIDTH, height=HEIGHT, 
+        postprocess(source_path=SOURCE_PATH, dataset=CURRENT_DATASET, width=WIDTH, height=HEIGHT, 
                     only_mask_convertion=ONLY_MASK_CONVERTION, delete_original=DELETE_ORIGINAL)
 
 
