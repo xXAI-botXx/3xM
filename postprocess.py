@@ -46,7 +46,7 @@ SOURCE_PATH = "D:/3xM" # "/home/local-admin/data/3xM"
 # for postprocessing only
 ONLY_MASK_CONVERTION = True
 DELETE_ORIGINAL = True
-NUM_WORKERS = 8
+NUM_WORKERS = -1
 WIDTH = 1920
 HEIGHT =  1080
 
