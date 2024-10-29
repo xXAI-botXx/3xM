@@ -31,14 +31,15 @@ class DATASET(Enum):
 ##################
 # User Variables #
 ##################
-CURRENT_DATASET = DATASET.TRIPPLE_M_80_10
+CURRENT_DATASET = DATASET.TRIPPLE_M_10_160
 
 SHOULD_DOWNLOAD = False
-SHOULD_UNZIP = False
+SHOULD_UNZIP = True
 SHOULD_POST_PROCESS = True
 
 # For Download and Unzip
-DOWNLOAD_UNZIP_PATH = "D:/Downloads"    # "/home/local-admin/Downloads/"
+DOWNLOAD_UNZIP_PATH = "D:/Downloads/slot1"    # "/home/local-admin/Downloads/"
+CLEAR_ZIP_PATH = True
 
 # Destination for unzipping and source for postprocess
 SOURCE_PATH = "D:/3xM" # "/home/local-admin/data/3xM"
@@ -131,14 +132,8 @@ def download_dataset(
         shutil.rmtree(target_path)
     os.makedirs(target_path, exist_ok=True)
     
-    # download the files from kaggle, onedrive or googledrive
-    if source == DOWNLOAD_SOURCE.KAGGLE:
-        download_from_kaggle(target_path=target_path, download_url=dataset.value)
-    elif source == DOWNLOAD_SOURCE.ONEDRIVE:
-        target_path = os.path.join(target_path, f"{dataset_name}.zip")
-        download_from_onedrive(target_path=target_path, download_url=dataset.value)
-    elif source == DOWNLOAD_SOURCE.GOOGLEDRIVE:
-        download_from_googledrive(target_path=target_path, download_url=dataset.value)
+    # download the files from kaggle
+    download_from_kaggle(target_path=target_path, download_url=dataset.value)
 
 # Functions for Zip Extraction
 def move_all_files(source_dir, destination_dir):
@@ -150,7 +145,7 @@ def move_all_files(source_dir, destination_dir):
                 destination_file = os.path.join(destination_dir, filename)
                 shutil.move(source_file, destination_file)
 
-def extract_zip_folders(source_dir, destination_dir, dataset):
+def extract_zip_folders(source_dir, destination_dir, dataset, clear_zip_path):
     print("Start dataset extraction...")
 
     destination_dir = os.path.join(destination_dir, dataset.value["name"])
@@ -220,7 +215,9 @@ def extract_zip_folders(source_dir, destination_dir, dataset):
             error_files += [file_path]
             print(f"Error during extracting {file_name} = (is not a supported zip-format)")
 
-    shutil.rmtree(source_dir)
+    if clear_zip_path:
+        shutil.rmtree(source_dir)
+        os.makedirs(source_dir, exist_ok=True)
 
     print(f"\n\nErrors: {len(error_files)}")
     for cur_err_file in error_files:
@@ -400,7 +397,7 @@ if __name__ == "__main__":
     
     # Unzip the download files
     if SHOULD_UNZIP:
-        extract_zip_folders(source_dir=DOWNLOAD_UNZIP_PATH, destination_dir=SOURCE_PATH, dataset=CURRENT_DATASET)
+        extract_zip_folders(source_dir=DOWNLOAD_UNZIP_PATH, destination_dir=SOURCE_PATH, dataset=CURRENT_DATASET, clear_zip_path=CLEAR_ZIP_PATH)
 
     # Postprocessing
     if SHOULD_POST_PROCESS:
