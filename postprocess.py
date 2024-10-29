@@ -31,10 +31,10 @@ class DATASET(Enum):
 ##################
 # User Variables #
 ##################
-CURRENT_DATASET = DATASET.TRIPPLE_M_10_80
+CURRENT_DATASET = DATASET.TRIPPLE_M_80_10
 
 SHOULD_DOWNLOAD = False
-SHOULD_UNZIP = True
+SHOULD_UNZIP = False
 SHOULD_POST_PROCESS = True
 
 # For Download and Unzip
@@ -46,6 +46,7 @@ SOURCE_PATH = "D:/3xM" # "/home/local-admin/data/3xM"
 # for postprocessing only
 ONLY_MASK_CONVERTION = True
 DELETE_ORIGINAL = True
+NUM_WORKERS = 8
 WIDTH = 1920
 HEIGHT =  1080
 
@@ -317,7 +318,7 @@ def rgb_depth_mask_postprocess(name, source, width, height, only_mask_convertion
     mask_postprocess(name, os.path.join(source, "mask"), os.path.join(source, "mask-prep"), width, height, should_resize=(not only_mask_convertion))
 
 
-def postprocess(source_path, dataset, width, height, only_mask_convertion=True, delete_original=False):
+def postprocess(source_path, dataset, width, height, only_mask_convertion=True, delete_original=False, n_jobs=-1):
     """
     Postprocess rgb, depth and masks.
     
@@ -365,7 +366,7 @@ def postprocess(source_path, dataset, width, height, only_mask_convertion=True, 
             rgb_depth_mask_postprocess(cur_name, source_path, width, height, only_mask_convertion)
         
     # run all tasks as fast as possible
-    Parallel(n_jobs=-1)(
+    Parallel(n_jobs=n_jobs)(
         delayed(process_with_progress)(cur_name, idx)
         for idx, cur_name in enumerate(all_images)
     )
@@ -404,7 +405,8 @@ if __name__ == "__main__":
     # Postprocessing
     if SHOULD_POST_PROCESS:
         postprocess(source_path=SOURCE_PATH, dataset=CURRENT_DATASET, width=WIDTH, height=HEIGHT, 
-                    only_mask_convertion=ONLY_MASK_CONVERTION, delete_original=DELETE_ORIGINAL)
+                    only_mask_convertion=ONLY_MASK_CONVERTION, delete_original=DELETE_ORIGINAL,
+                    n_jobs=NUM_WORKERS)
 
 
 
