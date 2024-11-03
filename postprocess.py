@@ -27,18 +27,22 @@ class DATASET(Enum):
     TRIPPLE_M_160_10  = {"name":"3xM_Dataset_160_10",  "url": ""}
     TRIPPLE_M_160_80  = {"name":"3xM_Dataset_160_80",  "url": ""}
     TRIPPLE_M_160_160 = {"name":"3xM_Dataset_160_160", "url": ""}
+    TRIPPLE_M_KNOW_KNOW = {"name":"3xM_Test_Dataset_known_known", "url": ""}
+    TRIPPLE_M_UNKNOW_KNOW = {"name":"3xM_Test_Dataset_unknown_known", "url": ""}
+    TRIPPLE_M_KNOW_UNKNOW = {"name":"3xM_Test_Dataset_known_unknown", "url": ""}
+    TRIPPLE_M_UNKNOW_UNKNOW = {"name":"3xM_Test_Dataset_unknown_unknown", "url": ""}
 
 ##################
 # User Variables #
 ##################
-CURRENT_DATASET = DATASET.TRIPPLE_M_10_160
+CURRENT_DATASET = DATASET.TRIPPLE_M_160_160
 
 SHOULD_DOWNLOAD = False
-SHOULD_UNZIP = True
+SHOULD_UNZIP = False
 SHOULD_POST_PROCESS = True
 
 # For Download and Unzip
-DOWNLOAD_UNZIP_PATH = "D:/Downloads/slot1"    # "/home/local-admin/Downloads/"
+DOWNLOAD_UNZIP_PATH = "D:/Downloads/slot1/archive"    # "/home/local-admin/Downloads/"
 CLEAR_ZIP_PATH = True
 
 # Destination for unzipping and source for postprocess
