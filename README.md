@@ -12,7 +12,7 @@ This project contains:
 - (The Materials)
 - (The Shapes)
 
-Before you use any of my work, please check my [my section for license](#license).
+This work got used in my [Bachelor Exam](https://github.com/xXAI-botXx/Bachelorarbeit).
 
 ### In Short
 I created a dataset to analyze the behaviour of 3D-Models and Materials to the accuracy of instance segmentation.
