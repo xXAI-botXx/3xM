@@ -20,6 +20,22 @@ I created a dataset to analyze the behaviour of 3D-Models and Materials to the a
 Feel free to use my Unreal Engine 5 project, to create your own dataset for instance segmentation. You can add your own 3D-Models and Materials and also control the used amount of Materials/3D-Models.
 
 
+### Usage
+Using the 3xM dataset. just visit Kaggle (links below). In Kaggle you can download the datasets and there is also a introduction and example usage code. If you want to make your own data, see [the next chapter](#unreal-engine-5-datagenerator).
+
+- [3xM 10 Shapes 10 Textures](https://www.kaggle.com/datasets/tobiaippolito/3xm-10-10)
+- [3xM 10 Shapes 80 Textures](https://www.kaggle.com/datasets/tobiaippolito/3xm-10-80)
+- [3xM 10 Shapes 160 Textures](https://www.kaggle.com/datasets/tobiaippolito/3xm-10-160)
+- [3xM 80 Shapes 10 Textures](https://www.kaggle.com/datasets/tobiaippolito/3xm-80-10)
+- [3xM 80 Shapes 80 Textures](https://www.kaggle.com/datasets/tobiaippolito/3xm-80-80)
+- [3xM 80 Shapes 160 Textures](https://www.kaggle.com/datasets/tobiaippolito/3xm-80-160)
+- [3xM 160 Shapes 10 Textures](https://www.kaggle.com/datasets/tobiaippolito/3xm-160-10)
+- [3xM 160 Shapes 80 Textures](https://www.kaggle.com/datasets/tobiaippolito/3xm-160-80)
+- [3xM 160 Shapes 160 Textures](https://www.kaggle.com/datasets/tobiaippolito/3xm-160-160)
+
+
+
+
 ### Unreal Engine 5 Datagenerator
 You can download [my UE5 project here](https://1drv.ms/f/s!AqSTBkFULemxlPUARqP0lXwqg4Ssng?e=oaZ0ey). Or you can find all important files without the shapes/meshes and textures/materials in the [unreal_engine_544_project folder](./unreal_engine_544_project/).
 
